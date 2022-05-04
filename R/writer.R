@@ -702,17 +702,17 @@ scDRcoexNum <- function(inpConf, inpMeta, inp1, inp2, inpsub1, inpsub2, inpH5, i
   return(ggData)
 }}
 
-# Plot violin / boxplot
+# Plot violin / boxplot / lineplot
 # @description Violin plot gene expression
 # @param inpConf (data.frame) Configuration table
 # @param inpMeta (data.frame) Metadata table
-# @param inp1 (Character) Gene name to use
-# @param inp2 (Character) Gene name to use
+# @param inp1 (Character) X axis cell info
+# @param inp2 (Character) Y axis cell info / gene
 # @param inpsub1 (Character) Name of metadata column for subsetting
 # @param inpsub2 (Character/Vector) Levels under metadata column for subsetting
 # @param inpH5 (Character) Path to gene expression h5 file (sc1gexpr.h5)
 # @param inpGene (integer) Named integer vector of gene expression values (sc1gene.rds)
-# @param inptyp (Character) Plot type. "violin" else boxplot.
+# @param inptyp (Character) Plot type. "violin", "boxplot" or "lineplot".
 # @param inppts (Logical) Should points be displayed?
 # @param inpsiz (Numeric) Point size
 # @param inpfsz (Character) Custom font size
@@ -1324,7 +1324,7 @@ output${prefix}_gec_.dt <- renderDataTable({{
 #'
 wr_sv_vio <- function() {
 paste0('
-### Tab vio violinplot / boxplot ----
+### Tab vio violinplot / boxplot / lineplot ----
 
 {subst}  output${prefix}_vio_sub1.ui <- renderUI({{
 {subst}    sub = strsplit({prefix}conf[UI == input${prefix}_vio_sub1]$fID, "\\\\|")[[1]]
@@ -1340,7 +1340,8 @@ paste0('
 {subst}  }})
 
 output${prefix}_vio_oup <- renderPlot({{
-  scVioBox({prefix}conf, {prefix}meta, input${prefix}_vio_inp1, input${prefix}_vio_inp2, input${prefix}_vio_sub1, input${prefix}_vio_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_vio_typ, input${prefix}_vio_pts, input${prefix}_vio_siz, input${prefix}_vio_fsz, input${prefix}_vio_barsz)
+  gh5 <- ifelse(input${prefix}_vio_datatype == "normalised","{prefix}gexpr.h5","{prefix}gexpr2.h5")
+  scVioBox({prefix}conf, {prefix}meta, input${prefix}_vio_inp1, input${prefix}_vio_inp2, input${prefix}_vio_sub1, input${prefix}_vio_sub2, gh5, {prefix}gene, input${prefix}_vio_typ, input${prefix}_vio_pts, input${prefix}_vio_siz, input${prefix}_vio_fsz, input${prefix}_vio_barsz)
 }})
 
 output${prefix}_vio_oup.ui <- renderUI({{
@@ -1350,18 +1351,20 @@ output${prefix}_vio_oup.ui <- renderUI({{
 output${prefix}_vio_oup.pdf <- downloadHandler(
   filename = function() {{ paste0("{prefix}", input${prefix}_vio_typ, "_", input${prefix}_vio_inp1, "_", input${prefix}_vio_inp2, ".pdf") }},
   content = function(file) {{
+    gh5 <- ifelse(input${prefix}_vio_datatype == "normalised","{prefix}gexpr.h5","{prefix}gexpr2.h5")
     ggsave(
     file, device = "pdf", useDingbats = FALSE, bg = "white",
-    plot = scVioBox({prefix}conf, {prefix}meta, input${prefix}_vio_inp1, input${prefix}_vio_inp2, input${prefix}_vio_sub1, input${prefix}_vio_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_vio_typ, input${prefix}_vio_pts, input${prefix}_vio_siz, input${prefix}_vio_fsz, input${prefix}_vio_barsz)
+    plot = scVioBox({prefix}conf, {prefix}meta, input${prefix}_vio_inp1, input${prefix}_vio_inp2, input${prefix}_vio_sub1, input${prefix}_vio_sub2, gh5, {prefix}gene, input${prefix}_vio_typ, input${prefix}_vio_pts, input${prefix}_vio_siz, input${prefix}_vio_fsz, input${prefix}_vio_barsz)
     )
 }})
 
 output${prefix}_vio_oup.png <- downloadHandler(
   filename = function() {{ paste0("{prefix}", input${prefix}_vio_typ, "_", input${prefix}_vio_inp1, "_", input${prefix}_vio_inp2,".png") }},
   content = function(file) {{
+    gh5 <- ifelse(input${prefix}_vio_datatype == "normalised","{prefix}gexpr.h5","{prefix}gexpr2.h5")
     ggsave(
     file, device = "png", bg = "white", dpi = input${prefix}_vio_oup.res,
-    plot = scVioBox({prefix}conf, {prefix}meta, input${prefix}_vio_inp1, input${prefix}_vio_inp2, input${prefix}_vio_sub1, input${prefix}_vio_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_vio_typ, input${prefix}_vio_pts, input${prefix}_vio_siz, input${prefix}_vio_fsz, input${prefix}_vio_barsz)
+    plot = scVioBox({prefix}conf, {prefix}meta, input${prefix}_vio_inp1, input${prefix}_vio_inp2, input${prefix}_vio_sub1, input${prefix}_vio_sub2, gh5, {prefix}gene, input${prefix}_vio_typ, input${prefix}_vio_pts, input${prefix}_vio_siz, input${prefix}_vio_fsz, input${prefix}_vio_barsz)
     )
 }}) # End of tab vio
 
@@ -2532,7 +2535,8 @@ tabPanel(
               condition = "input.{prefix}_vio_typ == \'lineplot\'",
               sliderInput("{prefix}_vio_barsz", "Line size", min = 0.05, max = 0.5, step = 0.01, value = 0.3)
               )
-            )
+            ),
+            selectInput("{prefix}_vio_datatype", "Data type", choices = c("normalised", "raw"), selected = "normalised"),
           ),
           div(
             class = "input-panel",

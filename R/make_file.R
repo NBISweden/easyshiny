@@ -13,7 +13,7 @@
 #' @param obj input single-cell object for Seurat (v3+) / SingleCellExperiment 
 #'   data or input file path for h5ad / loom files
 #' @param scConf shinycell config data.table
-#' @param gex.assay assay in single-cell data object to use for plotting 
+#' @param assay1 assay in single-cell data object to use for plotting 
 #'   gene expression, which must match one of the following:
 #'   \itemize{
 #'     \item{Seurat objects}: "RNA" or "integrated" assay, 
@@ -25,8 +25,11 @@
 #'     \item{loom files}: "matrix" or any assay in "layers",
 #'       default is "matrix"
 #'   }
-#' @param gex.slot slot in single-cell assay to plot. This is only used 
+#' @param slot1 slot in single-cell assay to plot. This is only used 
 #'   for Seurat objects (v3+). Default is to use the "data" slot
+#' @param assay2 secondary assay to use (Optional)
+#' @param slot2 secondary slot to use (Optional). This is only used
+#'   for Seurat objects (v3+).
 #' @param gene.mapping specifies whether to convert human / mouse Ensembl gene 
 #'   IDs (e.g. ENSG000xxx / ENSMUSG000xxx) into "user-friendly" gene symbols. 
 #'   Set this to \code{TRUE} if you are using Ensembl gene IDs. Default is 
@@ -55,26 +58,46 @@
 #'
 #' @export
 make_file <- function(
-  obj, scConf, gex.assay = NA, gex.slot = c("data", "scale.data", "counts"), 
+  obj, scConf, assay1 = NA, slot1 = c("data", "scale.data", "counts"), 
+  assay2 = NA, slot2 = NA,
   gene.mapping = FALSE, shiny.prefix = "sc1", shiny.dir = "shinyApp/",
   default.gene1 = NA, default.gene2 = NA, default.multigene = NA, 
   default.dimred = NA, chunkSize = 500, tabs = c("civge", "civci", "gevge", "gem", "gec", "vio", "pro", "hea")){
   
   ### Preprocessing and checks
   
-  # Generate defaults for gex.assay / gex.slot ----
+  # check gex2
+  # check if assay1=assay2 and slot1=slot2
+  # check if obj is seurat
+  # check if assay1,slot1 has same dims as assay2,slot2
+  if(!is.na(assay2) && !is.na(slot2)) {
+    if(class(obj)[1] != "Seurat") stop("Only Seurat v3 objects are supported when using assay2 and slot2.")
+    if(!all.equal(dim(slot(obj@assays[[assay1[1]]], slot1[1])),dim(slot(obj@assays[[assay2[1]]], slot2[1])))) stop("Dimensions of assay1,slot1 do not match assay2,slot2. Both datasets must have the same dimensions.")
+    gex2 <- TRUE
+  }else{
+    stop("assay1 is the same as assay2 and slot1 is the same as slot2. Either remove assay2/slot2 or change assay2/slot2.")
+  }
+  
+  # Generate defaults for assay1 / slot1 ----
   if(class(obj)[1] == "Seurat"){
     # Seurat Object
-    if(is.na(gex.assay[1])){gex.assay = "RNA"}
-    gex.matdim = dim(slot(obj@assays[[gex.assay[1]]], gex.slot[1]))
-    gex.rownm = rownames(slot(obj@assays[[gex.assay[1]]], gex.slot[1]))
-    gex.colnm = colnames(slot(obj@assays[[gex.assay[1]]], gex.slot[1]))
-    # defGenes = obj@assays[[gex.assay[1]]]@var.features[1:10]
+    if(is.na(assay1[1])){assay1 = "RNA"}
+    gex1.matdim = dim(slot(obj@assays[[assay1[1]]], slot1[1]))
+    gex1.rownm = rownames(slot(obj@assays[[assay1[1]]], slot1[1]))
+    gex1.colnm = colnames(slot(obj@assays[[assay1[1]]], slot1[1]))
+    
+    if(gex2){
+      gex2.matdim = dim(slot(obj@assays[[assay2[1]]], slot2[1]))
+      gex2.rownm = rownames(slot(obj@assays[[assay2[1]]], slot2[1]))
+      gex2.colnm = colnames(slot(obj@assays[[assay2[1]]], slot2[1]))
+    }
+    
+    # defGenes = obj@assays[[assay1[1]]]@var.features[1:10]
     defGenes = Seurat::VariableFeatures(obj)[1:10]
     if(is.na(defGenes[1])){
       warning(paste0("Variable genes for seurat object not found! Have you ",
                      "ran `FindVariableFeatures` or `SCTransform`?"))
-      defGenes = gex.rownm[1:10]
+      defGenes = gex1.rownm[1:10]
     }
     sc1meta = data.table(sampleID = rownames(obj@meta.data), obj@meta.data)
     
@@ -83,27 +106,26 @@ make_file <- function(
     if(is.null(colnames(obj)[1])){
       colnames(obj) = paste0("cell_", seq(ncol(obj)))
     }    # Populate cell IDs if they are not present
-    if(is.na(gex.assay[1])){gex.assay = "logcounts"}
-    gex.matdim = dim(SummarizedExperiment::assay(obj, gex.assay[1]))
-    gex.rownm = rownames(SummarizedExperiment::assay(obj, gex.assay[1]))
-    gex.colnm = colnames(SummarizedExperiment::assay(obj, gex.assay[1]))
-    defGenes = gex.rownm[1:10]
+    if(is.na(assay1[1])){assay1 = "logcounts"}
+    gex1.matdim = dim(SummarizedExperiment::assay(obj, assay1[1]))
+    gex1.rownm = rownames(SummarizedExperiment::assay(obj, assay1[1]))
+    gex1.colnm = colnames(SummarizedExperiment::assay(obj, assay1[1]))
+    defGenes = gex1.rownm[1:10]
     sc1meta = SingleCellExperiment::colData(obj)
-    sc1meta = data.table(sampleID = rownames(sc1meta), 
-                         as.data.frame(sc1meta))
+    sc1meta = data.table(sampleID = rownames(sc1meta), as.data.frame(sc1meta))
     
   } else if (tolower(tools::file_ext(obj)) == "h5ad"){
     # h5ad file
-    if(is.na(gex.assay[1])){gex.assay = "X"}
+    if(is.na(assay1[1])){assay1 = "X"}
     # Can just check X since inpH5$layers should have same dimensions
     ad <- import("anndata", convert = FALSE)
     sp <- import('scipy.sparse', convert = FALSE)
     inpH5 = ad$read_h5ad(obj)
-    gex.matdim = rev(unlist(py_to_r(inpH5$X$shape)))  
-    gex.rownm = py_to_r(inpH5$var_names$values)
-    gex.colnm = py_to_r(inpH5$obs_names$values)
-    defGenes = gex.rownm[1:10]
-    sc1meta = data.table(sampleID = gex.colnm)
+    gex1.matdim = rev(unlist(py_to_r(inpH5$X$shape)))  
+    gex1.rownm = py_to_r(inpH5$var_names$values)
+    gex1.colnm = py_to_r(inpH5$obs_names$values)
+    defGenes = gex1.rownm[1:10]
+    sc1meta = data.table(sampleID = gex1.colnm)
     sc1meta = cbind(sc1meta, data.table(py_to_r(inpH5$obs$values)))
     colnames(sc1meta) = c("sampleID", py_to_r(inpH5$obs$columns$values))
     for(i in colnames(sc1meta)[-1]){
@@ -116,18 +138,18 @@ make_file <- function(
 
   } else if (tolower(tools::file_ext(obj)) == "loom"){
     # loom file
-    if(is.na(gex.assay[1])){gex.assay = "matrix"}
+    if(is.na(assay1[1])){assay1 = "matrix"}
     # Can just check matrix since inpLM[["layers"]] should have same dimensions
     inpLM = H5File$new(obj, mode = "r+")
-    gex.matdim = rev(inpLM[["matrix"]]$dims)
-    gex.rownm = inpLM[["row_attrs"]][["Gene"]]$read()
-    for(i in unique(gex.rownm[duplicated(gex.rownm)])){
-      gex.rownm[gex.rownm == i] = paste0(i, "-", seq(sum(gex.rownm == i)))
+    gex1.matdim = rev(inpLM[["matrix"]]$dims)
+    gex1.rownm = inpLM[["row_attrs"]][["Gene"]]$read()
+    for(i in unique(gex1.rownm[duplicated(gex1.rownm)])){
+      gex1.rownm[gex1.rownm == i] = paste0(i, "-", seq(sum(gex1.rownm == i)))
     } # make unique gene names
-    gex.colnm = inpLM[["col_attrs"]][["CellID"]]$read()
-    defGenes = gex.rownm[1:10]
+    gex1.colnm = inpLM[["col_attrs"]][["CellID"]]$read()
+    defGenes = gex1.rownm[1:10]
     cellIdx = which(inpLM[["col_attrs"]]$names == "CellID")
-    sc1meta = data.table(sampleID = gex.colnm)
+    sc1meta = data.table(sampleID = gex1.colnm)
     for(i in inpLM[["col_attrs"]]$names[-cellIdx]){
       tmp = inpLM[["col_attrs"]][[i]]$read()
       if(length(tmp) == nrow(sc1meta)){sc1meta[[i]] = tmp}
@@ -136,10 +158,10 @@ make_file <- function(
   } else {
     stop("Only Seurat/SCE objects or h5ad/loom file paths are accepted!")
   }
-  
+    
   # Perform gene.mapping if specified (also map defGenes)
   if(gene.mapping[1] == TRUE){
-    if(sum(grepl("^ENSG000", gex.rownm)) >= sum(grepl("^ENMUSG000", gex.rownm))){
+    if(sum(grepl("^ENSG000", gex1.rownm)) >= sum(grepl("^ENMUSG000", gex1.rownm))){
       tmp1 = fread(system.file("extdata", "geneMapHS.txt.gz", 
                                package = "easyshiny"))
     } else {
@@ -151,18 +173,18 @@ make_file <- function(
   }
   # Check if gene.mapping is partial or not
   if(gene.mapping[1] == FALSE){
-    gene.mapping = gex.rownm      
-    names(gene.mapping) = gex.rownm    # Basically no mapping
+    gene.mapping = gex1.rownm      
+    names(gene.mapping) = gex1.rownm    # Basically no mapping
   } else {
-    if(!all(gex.rownm %in% names(gene.mapping))){
+    if(!all(gex1.rownm %in% names(gene.mapping))){
       # warning("Mapping for some gene identifiers are not provided!")
-      tmp1 = gex.rownm[gex.rownm %in% names(gene.mapping)]
+      tmp1 = gex1.rownm[gex1.rownm %in% names(gene.mapping)]
       tmp1 = gene.mapping[tmp1]
-      tmp2 = gex.rownm[!gex.rownm %in% names(gene.mapping)]
+      tmp2 = gex1.rownm[!gex1.rownm %in% names(gene.mapping)]
       names(tmp2) = tmp2
       gene.mapping = c(tmp1, tmp2)
     } 
-    gene.mapping = gene.mapping[gex.rownm]
+    gene.mapping = gene.mapping[gex1.rownm]
   }
   defGenes = gene.mapping[defGenes]
   
@@ -300,71 +322,95 @@ make_file <- function(
   sc1gexpr.grp <- sc1gexpr$create_group("grp")
   sc1gexpr.grp.data <- sc1gexpr.grp$create_dataset(
     "data",  dtype = h5types$H5T_NATIVE_FLOAT,
-    space = H5S$new("simple", dims = gex.matdim, maxdims = gex.matdim),
-    chunk_dims = c(1,gex.matdim[2]))
+    space = H5S$new("simple", dims = gex1.matdim, maxdims = gex1.matdim),
+    chunk_dims = c(1,gex1.matdim[2]))
+  
+  # XXXgexpr2.h5 (assay2, slot2)
+  if(!is.na(assay2) && !is.na(slot2)){
+    filename2 = paste0(shiny.dir, "/", shiny.prefix, "gexpr2.h5")
+    sc1gexpr2 <- H5File$new(filename2, mode = "w")
+    sc1gexpr2.grp <- sc1gexpr2$create_group("grp")
+    sc1gexpr2.grp.data <- sc1gexpr2.grp$create_dataset(
+      "data",  dtype = h5types$H5T_NATIVE_FLOAT,
+      space = H5S$new("simple", dims = gex2.matdim, maxdims = gex2.matdim),
+      chunk_dims = c(1,gex2.matdim[2]))
+  }
+  
   chk = chunkSize
   if(class(obj)[1] == "Seurat"){
     # Seurat Object
-    for(i in 1:floor((gex.matdim[1]-8)/chk)){
+    for(i in 1:floor((gex1.matdim[1]-8)/chk)){
       sc1gexpr.grp.data[((i-1)*chk+1):(i*chk), ] <- as.matrix(
-        slot(obj@assays[[gex.assay[1]]], gex.slot[1])[((i-1)*chk+1):(i*chk),])
+        slot(obj@assays[[assay1[1]]], slot1[1])[((i-1)*chk+1):(i*chk),])
     }
-    sc1gexpr.grp.data[(i*chk+1):gex.matdim[1], ] <- as.matrix(
-      slot(obj@assays[[gex.assay[1]]], gex.slot[1])[(i*chk+1):gex.matdim[1],])
+    sc1gexpr.grp.data[(i*chk+1):gex1.matdim[1], ] <- as.matrix(
+      slot(obj@assays[[assay1[1]]], slot1[1])[(i*chk+1):gex1.matdim[1],])
+    
+    # assay2
+    if(gex2){
+      for(i in 1:floor((gex2.matdim[1]-8)/chk)){
+        sc1gexpr2.grp.data[((i-1)*chk+1):(i*chk), ] <- as.matrix(
+          slot(obj@assays[[assay2[1]]], slot2[1])[((i-1)*chk+1):(i*chk),])
+      }
+      sc1gexpr2.grp.data[(i*chk+1):gex2.matdim[1], ] <- as.matrix(
+        slot(obj@assays[[assay2[1]]], slot2[1])[(i*chk+1):gex2.matdim[1],])
+      sc1gexpr2$close_all()
+    }
+    
     
   } else if (class(obj)[1] == "SingleCellExperiment"){
     # SCE Object
-    for(i in 1:floor((gex.matdim[1]-8)/chk)){
+    for(i in 1:floor((gex1.matdim[1]-8)/chk)){
       sc1gexpr.grp.data[((i-1)*chk+1):(i*chk), ] <- as.matrix(
-        SummarizedExperiment::assay(obj, gex.assay[1])[((i-1)*chk+1):(i*chk),])
+        SummarizedExperiment::assay(obj, assay1[1])[((i-1)*chk+1):(i*chk),])
     }
-    sc1gexpr.grp.data[(i*chk+1):gex.matdim[1], ] <- as.matrix(
-      SummarizedExperiment::assay(obj, gex.assay[1])[(i*chk+1):gex.matdim[1],])
+    sc1gexpr.grp.data[(i*chk+1):gex1.matdim[1], ] <- as.matrix(
+      SummarizedExperiment::assay(obj, assay1[1])[(i*chk+1):gex1.matdim[1],])
     
   } else if (tolower(tools::file_ext(obj)) == "h5ad"){
     # h5ad file
-    if(gex.assay == "X"){
+    if(assay1 == "X"){
       scGEX = Matrix::t(py_to_r(sp$csc_matrix(inpH5$X)))
     } else {
-      scGEX = Matrix::t(py_to_r(sp$csc_matrix(inpH5$layers[[gex.assay]])))
+      scGEX = Matrix::t(py_to_r(sp$csc_matrix(inpH5$layers[[assay1]])))
     }
-    for(i in 1:floor((gex.matdim[1]-8)/chk)){
+    for(i in 1:floor((gex1.matdim[1]-8)/chk)){
       sc1gexpr.grp.data[((i-1)*chk+1):(i*chk), ] <- as.matrix(
         scGEX[((i-1)*chk+1):(i*chk),])
     }
-    sc1gexpr.grp.data[(i*chk+1):gex.matdim[1], ] <- as.matrix(
-      scGEX[(i*chk+1):gex.matdim[1],])
+    sc1gexpr.grp.data[(i*chk+1):gex1.matdim[1], ] <- as.matrix(
+      scGEX[(i*chk+1):gex1.matdim[1],])
 
   } else if (tolower(tools::file_ext(obj)) == "loom"){
     # loom file
-    if(gex.assay == "matrix"){
-      for(i in 1:floor((gex.matdim[1]-8)/chk)){
+    if(assay1 == "matrix"){
+      for(i in 1:floor((gex1.matdim[1]-8)/chk)){
         sc1gexpr.grp.data[((i-1)*chk+1):(i*chk), ] <- t(
           inpLM[["matrix"]][, ((i-1)*chk+1):(i*chk)])
       }
-      sc1gexpr.grp.data[(i*chk+1):gex.matdim[1], ] <- t(
-        inpLM[["matrix"]][, (i*chk+1):gex.matdim[1]])
+      sc1gexpr.grp.data[(i*chk+1):gex1.matdim[1], ] <- t(
+        inpLM[["matrix"]][, (i*chk+1):gex1.matdim[1]])
     } else {
-      for(i in 1:floor((gex.matdim[1]-8)/chk)){
+      for(i in 1:floor((gex1.matdim[1]-8)/chk)){
         sc1gexpr.grp.data[((i-1)*chk+1):(i*chk), ] <- t(
-          inpLM[["layers"]][[gex.assay]][, ((i-1)*chk+1):(i*chk)])
+          inpLM[["layers"]][[assay1]][, ((i-1)*chk+1):(i*chk)])
       }
-      sc1gexpr.grp.data[(i*chk+1):gex.matdim[1], ] <- t(
-        inpLM[["layers"]][[gex.assay]][, (i*chk+1):gex.matdim[1]])
+      sc1gexpr.grp.data[(i*chk+1):gex1.matdim[1], ] <- t(
+        inpLM[["layers"]][[assay1]][, (i*chk+1):gex1.matdim[1]])
     }
   }
 
-  # sc1gexpr.grp.data[, ] <- as.matrix(gex.matrix[,])
+  # sc1gexpr.grp.data[, ] <- as.matrix(gex1.matrix[,])
   sc1gexpr$close_all()
-  if(!isTRUE(all.equal(sc1meta$sampleID, gex.colnm))){
-    sc1meta$sampleID = factor(sc1meta$sampleID, levels = gex.colnm)
+  if(!isTRUE(all.equal(sc1meta$sampleID, gex1.colnm))){
+    sc1meta$sampleID = factor(sc1meta$sampleID, levels = gex1.colnm)
     sc1meta = sc1meta[order(sampleID)]
     sc1meta$sampleID = as.character(sc1meta$sampleID)
   }
   
   # Make XXXgenes.rds ----
   
-  sc1gene = seq(gex.matdim[1])
+  sc1gene = seq(gex1.matdim[1])
   names(gene.mapping) = NULL
   names(sc1gene) = gene.mapping
   sc1gene = sc1gene[order(names(sc1gene))]

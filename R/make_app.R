@@ -6,7 +6,7 @@
 #' @param obj input single-cell object for Seurat (v3+) / SingleCellExperiment
 #'   data or input file path for h5ad / loom files
 #' @param scConf shinycell config data.table
-#' @param gex.assay assay in single-cell data object to use for plotting
+#' @param assay1 assay in single-cell data object to use for plotting
 #'   gene expression, which must match one of the following:
 #'   \itemize{
 #'     \item{Seurat objects}: "RNA" or "integrated" assay,
@@ -18,8 +18,11 @@
 #'     \item{loom files}: "matrix" or any assay in "layers",
 #'       default is "matrix"
 #'   }
-#' @param gex.slot slot in single-cell assay to plot. This is only used
+#' @param slot1 slot in single-cell assay to plot. This is only used
 #'   for Seurat objects (v3+). Default is to use the "data" slot
+#' @param assay2 secondary assay to use (Optional)
+#' @param slot2 secondary slot to use (Optional). This is only used
+#'   for Seurat objects (v3+).
 #' @param gene.mapping specifies whether to convert human / mouse Ensembl gene
 #'   IDs (e.g. ENSG000xxx / ENSMUSG000xxx) into "user-friendly" gene symbols.
 #'   Set this to \code{TRUE} if you are using Ensembl gene IDs. Default is
@@ -51,17 +54,18 @@
 #'
 #' @export
 #' 
-make_app <- function(obj, scConf, gex.assay = NA, gex.slot = c("data", "scale.data", "counts"), gene.mapping = FALSE, shiny.title = "scRNA-seq shiny app", shiny.dir = "shinyApp/", enableSubset = TRUE, defPtSiz = 1.25, ganalytics = NA, default.gene1 = NA, default.gene2 = NA, default.multigene = NA, default.dimred = NA, tabs = c("civge", "civci", "gevge", "gem", "gec", "vio", "pro", "hea"), theme = "flatly", font = "Lato") {
+make_app <- function(obj, scConf, assay1 = NA, slot1 = c("data", "scale.data", "counts"), assay2 = NA, slot2 = NA, gene.mapping = FALSE, shiny.title = "scRNA-seq shiny app", shiny.dir = "shinyApp/", enableSubset = TRUE, defPtSiz = 1.25, ganalytics = NA, default.gene1 = NA, default.gene2 = NA, default.multigene = NA, default.dimred = NA, tabs = c("civge", "civci", "gevge", "gem", "gec", "vio", "pro", "hea"), theme = "flatly", font = "Lato") {
 
   tbs <- c("civge", "civci", "gevge", "gem", "gec", "vio", "pro", "hea", "mar")
   if(length(tabs) < 1) stop("At least 1 tab must be specified.")
   if(any(!tabs %in% tbs)) stop(paste("One of more tabs are incorrect. Tab options are:",paste(tbs,collapse=", "),"."))
-    
+  
   # Checks are performed in respective functions
   # Wrapper for two main functions
   make_file(
     obj = obj, scConf = scConf,
-    gex.assay = gex.assay[1], gex.slot = gex.slot[1],
+    assay1 = assay1[1], slot1 = slot1[1],
+    assay2 = assay2[1], slot2 = slot2[1],
     gene.mapping = gene.mapping,
     shiny.prefix = "sc1", shiny.dir = shiny.dir,
     default.gene1, default.gene2, default.multigene, default.dimred,
