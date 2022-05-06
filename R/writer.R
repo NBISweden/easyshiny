@@ -1406,7 +1406,7 @@ output${prefix}_vio_oup.ui <- renderUI({{
 }})
 
 output${prefix}_vio_oup.png <- downloadHandler(
-  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_vio_typ, "_", input${prefix}_vio_inp1, "_", input${prefix}_vio_inp2,".png")) }},
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_vio_typ, "_", input${prefix}_vio_datatype, "_", input${prefix}_vio_inp1, "_", input${prefix}_vio_inp2,".png")) }},
   content = function(file) {{
     gh5 <- ifelse(input${prefix}_vio_datatype == "normalised","{prefix}gexpr.h5","{prefix}gexpr2.h5")
     ggsave(
@@ -1416,7 +1416,7 @@ output${prefix}_vio_oup.png <- downloadHandler(
 }}) 
 
 output${prefix}_vio_oup.pdf <- downloadHandler(
-  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_vio_typ, "_", input${prefix}_vio_inp1, "_", input${prefix}_vio_inp2, ".pdf")) }},
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_vio_typ, "_", input${prefix}_vio_datatype, "_", input${prefix}_vio_inp1, "_", input${prefix}_vio_inp2, ".pdf")) }},
   content = function(file) {{
     gh5 <- ifelse(input${prefix}_vio_datatype == "normalised","{prefix}gexpr.h5","{prefix}gexpr2.h5")
     ggsave(
@@ -1426,7 +1426,7 @@ output${prefix}_vio_oup.pdf <- downloadHandler(
 }})
 
 output${prefix}_vio_oup.svg <- downloadHandler(
-  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_vio_typ, "_", input${prefix}_vio_inp1, "_", input${prefix}_vio_inp2, ".svg")) }},
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_vio_typ, "_", input${prefix}_vio_datatype, "_", input${prefix}_vio_inp1, "_", input${prefix}_vio_inp2, ".svg")) }},
   content = function(file) {{
     gh5 <- ifelse(input${prefix}_vio_datatype == "normalised","{prefix}gexpr.h5","{prefix}gexpr2.h5")
     ggsave(
