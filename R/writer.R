@@ -1059,7 +1059,7 @@ output${prefix}_civge_oup1.pdf <- downloadHandler(
  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_civge_drX,"_", input${prefix}_civge_drY,"_", input${prefix}_civge_inp1,".pdf")) }},
  content = function(file) {{
    ggsave(
-   file, device = "pdf", useDingbats = FALSE, bg = "white",
+   file, device = "pdf", useDingbats = FALSE, bg = "white", onefile = TRUE,
    plot = scDRcell({prefix}conf, {prefix}meta, input${prefix}_civge_drX, input${prefix}_civge_drY, input${prefix}_civge_inp1,   input${prefix}_civge_sub1, input${prefix}_civge_sub2, input${prefix}_civge_siz, input${prefix}_civge_col1, input${prefix}_civge_ord1,  input${prefix}_civge_fsz, input${prefix}_civge_asp, input${prefix}_civge_txt, input${prefix}_civge_lab1)
    )
 }})
@@ -1102,7 +1102,7 @@ output${prefix}_civge_oup2.pdf <- downloadHandler(
  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_civge_drX,"_",input${prefix}_civge_drY,"_", input${prefix}_civge_inp2,".pdf")) }},
  content = function(file) {{
    ggsave(
-   file, device = "pdf", useDingbats = FALSE, bg = "white",
+   file, device = "pdf", useDingbats = FALSE, bg = "white", onefile = TRUE,
    plot = scDRgene({prefix}conf, {prefix}meta, input${prefix}_civge_drX, input${prefix}_civge_drY, input${prefix}_civge_inp2,  input${prefix}_civge_sub1, input${prefix}_civge_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_civge_siz, input${prefix}_civge_col2, input${prefix}_civge_ord2, input${prefix}_civge_fsz, input${prefix}_civge_asp, input${prefix}_civge_txt)
    )
 }}) 
@@ -1159,7 +1159,7 @@ output${prefix}_civci_oup1.png <- downloadHandler(
 output${prefix}_civci_oup1.pdf <- downloadHandler(
   filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_civci_drX, "_", input${prefix}_civci_drY, "_", input${prefix}_civci_inp1, ".pdf")) }},
   content = function(file) {{ ggsave(
-    file, device = "pdf", useDingbats = FALSE, bg = "white",
+    file, device = "pdf", useDingbats = FALSE, bg = "white", onefile = TRUE,
     plot = scDRcell({prefix}conf, {prefix}meta, input${prefix}_civci_drX, input${prefix}_civci_drY, input${prefix}_civci_inp1, input${prefix}_civci_sub1, input${prefix}_civci_sub2, input${prefix}_civci_siz, input${prefix}_civci_col1, input${prefix}_civci_ord1, input${prefix}_civci_fsz, input${prefix}_civci_asp, input${prefix}_civci_txt, input${prefix}_civci_lab1) )
 }})
 
@@ -1192,7 +1192,7 @@ output${prefix}_civci_oup2.pdf <- downloadHandler(
   filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_civci_drX,"_",input${prefix}_civci_drY,"_", input${prefix}_civci_inp2,".pdf")) }},
   content = function(file) {{
     ggsave(
-    file, device = "pdf", useDingbats = FALSE, bg = "white",
+    file, device = "pdf", useDingbats = FALSE, bg = "white", onefile = TRUE,
     plot = scDRcell({prefix}conf, {prefix}meta, input${prefix}_civci_drX, input${prefix}_civci_drY, input${prefix}_civci_inp2, input${prefix}_civci_sub1, input${prefix}_civci_sub2, input${prefix}_civci_siz, input${prefix}_civci_col2, input${prefix}_civci_ord2, input${prefix}_civci_fsz, input${prefix}_civci_asp, input${prefix}_civci_txt, input${prefix}_civci_lab2) 
     )
 }})
@@ -1254,7 +1254,7 @@ output${prefix}_gevge_oup1.pdf <- downloadHandler(
   filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_gevge_drX, "_", input${prefix}_gevge_drY, "_", input${prefix}_gevge_inp1, ".pdf")) }},
   content = function(file) {{
     ggsave(
-    file, device = "pdf", useDingbats = FALSE, bg = "white",
+    file, device = "pdf", useDingbats = FALSE, bg = "white", onefile = TRUE,
     plot = scDRgene({prefix}conf, {prefix}meta, input${prefix}_gevge_drX, input${prefix}_gevge_drY, input${prefix}_gevge_inp1, input${prefix}_gevge_sub1, input${prefix}_gevge_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_gevge_siz, input${prefix}_gevge_col1, input${prefix}_gevge_ord1, input${prefix}_gevge_fsz, input${prefix}_gevge_asp, input${prefix}_gevge_txt)
     )
 }})
@@ -1290,7 +1290,7 @@ output${prefix}_gevge_oup2.pdf <- downloadHandler(
   filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_gevge_drX, "_", input${prefix}_gevge_drY, "_", input${prefix}_gevge_inp2,".pdf")) }},
   content = function(file) {{
     ggsave(
-    file, device = "pdf", useDingbats = FALSE, bg = "white",
+    file, device = "pdf", useDingbats = FALSE, bg = "white", onefile = TRUE,
     plot = scDRgene({prefix}conf, {prefix}meta, input${prefix}_gevge_drX, input${prefix}_gevge_drY, input${prefix}_gevge_inp2, 
                     input${prefix}_gevge_sub1, input${prefix}_gevge_sub2,
                     "{prefix}gexpr.h5", {prefix}gene,
@@ -1354,7 +1354,7 @@ output${prefix}_gec_oup1.pdf <- downloadHandler(
   filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_gec_drX, "_", input${prefix}_gec_drY, "_", input${prefix}_gec_inp1, "_", input${prefix}_gec_inp2, ".pdf")) }},
   content = function(file) {{
     ggsave(
-    file, device = "pdf", useDingbats = FALSE, bg = "white",
+    file, device = "pdf", useDingbats = FALSE, bg = "white", onefile = TRUE,
     plot = scDRcoexFull({prefix}conf, {prefix}meta, input${prefix}_gec_drX, input${prefix}_gec_drY, input${prefix}_gec_inp1, input${prefix}_gec_inp2, input${prefix}_gec_sub1, input${prefix}_gec_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_gec_siz, input${prefix}_gec_col1, input${prefix}_gec_ord1, input${prefix}_gec_fsz, input${prefix}_gec_asp, input${prefix}_gec_txt)
     )
 }})
@@ -1420,7 +1420,7 @@ output${prefix}_vio_oup.pdf <- downloadHandler(
   content = function(file) {{
     gh5 <- ifelse(input${prefix}_vio_datatype == "normalised","{prefix}gexpr.h5","{prefix}gexpr2.h5")
     ggsave(
-    file, device = "pdf", useDingbats = FALSE, bg = "white",
+    file, device = "pdf", useDingbats = FALSE, bg = "white", onefile = TRUE,
     plot = scVioBox({prefix}conf, {prefix}meta, input${prefix}_vio_inp1, input${prefix}_vio_inp2, input${prefix}_vio_sub1, input${prefix}_vio_sub2, gh5, {prefix}gene, input${prefix}_vio_typ, input${prefix}_vio_pts, input${prefix}_vio_siz, input${prefix}_vio_fsz, input${prefix}_vio_barsz)
     )
 }})
@@ -1479,7 +1479,7 @@ output${prefix}_pro_oup.pdf <- downloadHandler(
   filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_pro_typ, "_", input${prefix}_pro_inp1, "_", input${prefix}_pro_inp2, ".pdf")) }},
   content = function(file) {{
     ggsave(
-    file, device = "pdf", useDingbats = FALSE, bg = "white",
+    file, device = "pdf", useDingbats = FALSE, bg = "white", onefile = TRUE,
     plot = scProp({prefix}conf, {prefix}meta, input${prefix}_pro_inp1, input${prefix}_pro_inp2, input${prefix}_pro_sub1, input${prefix}_pro_sub2, input${prefix}_pro_typ, input${prefix}_pro_flp, input${prefix}_pro_fsz)
     )
   }})
@@ -1541,9 +1541,11 @@ output${prefix}_hea_oup.png <- downloadHandler(
 output${prefix}_hea_oup.pdf <- downloadHandler(
   filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_hea_plt,"_",input${prefix}_hea_grp,".pdf")) }},
   content = function(file) {{
-    ggsave(
-    file, device = "pdf", useDingbats = FALSE, bg = "white", height = input${prefix}_hea_oup.height, width = input${prefix}_hea_oup.width, units = "cm", plot = scBubbHeat({prefix}conf, {prefix}meta, input${prefix}_hea_inp, input${prefix}_hea_grp, input${prefix}_hea_plt, input${prefix}_hea_sub1, input${prefix}_hea_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_hea_scl, input${prefix}_hea_row, input${prefix}_hea_col, input${prefix}_hea_cols, input${prefix}_hea_fsz)
-    )
+    pdf(file, useDingbats = FALSE, bg = "white", height = input${prefix}_hea_oup.height/2.54, width = input${prefix}_hea_oup.width/2.54, onefile = TRUE)
+    showtext::showtext_begin()
+    print(scBubbHeat({prefix}conf, {prefix}meta, input${prefix}_hea_inp, input${prefix}_hea_grp, input${prefix}_hea_plt, input${prefix}_hea_sub1, input${prefix}_hea_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_hea_scl, input${prefix}_hea_row, input${prefix}_hea_col, input${prefix}_hea_cols, input${prefix}_hea_fsz))
+    showtext::showtext_end()
+    dev.off()
 }})
 
 output${prefix}_hea_oup.svg <- downloadHandler(
@@ -1598,9 +1600,12 @@ output${prefix}_gem_oup1.png <- downloadHandler(
 
 output${prefix}_gem_oup1.pdf <- downloadHandler(
   filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_gem_drX, "_", input${prefix}_gem_drY, "_expression.pdf")) },
-  content = function(file) {{ ggsave(
-    file, device = "pdf", useDingbats = FALSE, height = input${prefix}_gem_oup1.height, width = input${prefix}_gem_oup1.width, units = "cm", bg = "white",
-    plot = scFeature({prefix}conf, {prefix}meta, input${prefix}_gem_drX, input${prefix}_gem_drY, input${prefix}_gem_inp, input${prefix}_gem_sub1, input${prefix}_gem_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_gem_siz, input${prefix}_gem_col, input${prefix}_gem_ord, input${prefix}_gem_fsz, input${prefix}_gem_asp, input${prefix}_gem_txt, input${prefix}_gem_ncol))
+  content = function(file) {{
+  pdf(file, useDingbats = FALSE, height = input${prefix}_gem_oup1.height/2.54, width = input${prefix}_gem_oup1.width/2.54, bg = "white", onefile = TRUE)
+  showtext::showtext_begin()
+  print(scFeature({prefix}conf, {prefix}meta, input${prefix}_gem_drX, input${prefix}_gem_drY, input${prefix}_gem_inp, input${prefix}_gem_sub1, input${prefix}_gem_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_gem_siz, input${prefix}_gem_col, input${prefix}_gem_ord, input${prefix}_gem_fsz, input${prefix}_gem_asp, input${prefix}_gem_txt, input${prefix}_gem_ncol))
+  showtext::showtext_end()
+  dev.off()
 }})
 
 output${prefix}_gem_oup1.svg <- downloadHandler(
@@ -1631,11 +1636,12 @@ output${prefix}_mar_table <- renderDataTable({{
 #' Write code for main block of server.R
 #' @param prefix file prefix
 #' @param subst Conditional
+#' @param font Character denoting font for plots
 #' @param tabs Vector of tab names to include
 #' @rdname wr_sv_main
 #' @export wr_sv_main
 #'
-wr_sv_main <- function(prefix, subst = "", tabs = c("civge", "civci", "gevge", "gem", "gec", "vio", "pro", "hea")) {
+wr_sv_main <- function(prefix, subst = "", font = NULL, tabs = c("civge", "civci", "gevge", "gem", "gec", "vio", "pro", "hea")) {
   
 glue::glue(
 'optCrt="{{ option_create: function(data,escape) {{return(\'<div class=\\"create\\"><strong>\' + \'</strong></div>\');}} }}"

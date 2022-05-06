@@ -7,6 +7,7 @@
 wr_sv_main(
   prefix,
   subst = "",
+  font = NULL,
   tabs = c("civge", "civci", "gevge", "gem", "gec", "vio", "pro", "hea")
 )
 }
@@ -14,6 +15,8 @@ wr_sv_main(
 \item{prefix}{file prefix}
 
 \item{subst}{Conditional}
+
+\item{font}{Character denoting font for plots}
 
 \item{tabs}{Vector of tab names to include}
 }
