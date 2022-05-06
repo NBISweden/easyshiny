@@ -52,7 +52,7 @@ glue::glue(x,"\n")
 wr_sv_fix <- function(font = "Lato") {
   glue::glue('
 
-### Useful stuff ----
+### Initialise variables and functions ----
 
 # Colour palette
 cList <- list(
@@ -244,7 +244,7 @@ scFeature <- function(inpConf, inpMeta, inpdrX, inpdrY, inp, inpsub1, inpsub2, i
   }}
 
   if(inpncol < 1) inpncol <- floor(sqrt(length(plist)))
-  ggOut <- ggplotify::as.ggplot(arrangeGrob(grobs = plist, ncol = inpncol))
+  ggOut <- wrap_plots(plist) + plot_layout(ncol = inpncol)
   return(ggOut)
 }}
 
@@ -496,7 +496,8 @@ scDRcoexFull <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inp2, inpsub1,
                        inpsub2, inpH5, inpGene, inpsiz, inpcol, inpord, inpfsz,
                        inpasp, inptxt)
   g2 <- scDRcoexLeg(inp1, inp2, inpcol, inpfsz)
-  return(ggplotify::as.ggplot(gridExtra::arrangeGrob(g1, g2, nrow = 1, ncol = 2, widths = c(5, 2))))
+  g <- wrap_plots(g1, g2) + plot_layout(ncol = 2, nrow = 1, widths = c(10, 2))
+  return(g)
 }}
 
 # @description Gene Co-expression on dimred
@@ -864,9 +865,8 @@ scGeneList <- function(inp, inpGene) {{
 # @param inpcols
 # @param inpfsz (Character) Custom font size
 # @param col_line (Character) Line colour
-# @param save
 #
-scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpPlt, inpsub1, inpsub2, inpH5, inpGene, inpScl, inpRow, inpCol, inpcols, inpfsz, col_line = "grey60", save = FALSE) {{
+scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpPlt, inpsub1, inpsub2, inpH5, inpGene, inpScl, inpRow, inpCol, inpcols, inpfsz, col_line = "grey60") {{
   
   if (is.null(inpsub1)) {{ inpsub1 <- inpConf$UI[1] }}
 
@@ -989,27 +989,19 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpPlt, inpsub1, inpsub2, 
   # Final tidy
   ggLeg <- g_legend(ggOut)
   ggOut <- ggOut + theme(legend.position = "none")
-  if (!save) {{ 
-    if (inpRow & inpCol) {{
-      ggOut <- grid.arrange(ggOut, ggLeg, ggCol, ggRow, widths = c(7, 1), heights = c(1, 7, 2), layout_matrix = rbind(c(3, NA), c(1, 4), c(2, NA)))
-    }} else if (inpRow) {{
-      ggOut <- grid.arrange(ggOut, ggLeg, ggRow, widths = c(7, 1), heights = c(7, 2), layout_matrix = rbind(c(1, 3), c(2, NA)))
-    }} else if (inpCol) {{ 
-      ggOut <- grid.arrange(ggOut, ggLeg, ggCol, heights = c(1, 7, 2), layout_matrix = rbind(c(3), c(1), c(2))) 
-    }} else {{
-      ggOut <- grid.arrange(ggOut, ggLeg, heights = c(7, 2), layout_matrix = rbind(c(1), c(2))
-      ) 
-    }}
+  
+  if (inpRow & inpCol) {{
+    ggOut <- wrap_plots(ggCol, plot_spacer(), ggOut, ggRow, ggplotify::as.ggplot(ggLeg))+
+              plot_layout(ncol = 2, widths = c(7,1), heights = c(1,7,2))
+  }} else if (inpRow) {{
+    ggOut <- wrap_plots(ggOut, ggRow, ggplotify::as.ggplot(ggLeg))+
+              plot_layout(ncol = 2, widths = c(7,1), heights = c(7,2))
+  }} else if (inpCol) {{
+    ggOut <- wrap_plots(ggCol, ggOut, ggplotify::as.ggplot(ggLeg))+
+               plot_layout(ncol = 1, heights = c(1,7,2))
   }} else {{
-    if (inpRow & inpCol) {{
-      ggOut <- arrangeGrob(ggOut, ggLeg, ggCol, ggRow, widths = c(7, 1), heights = c(1, 7, 2), layout_matrix = rbind(c(3, NA), c(1, 4), c(2, NA))) 
-    }} else if (inpRow) {{
-      ggOut <- arrangeGrob(ggOut, ggLeg, ggRow, widths = c(7, 1), heights = c(7, 2), layout_matrix = rbind(c(1, 3), c(2, NA))) 
-    }} else if (inpCol) {{ 
-      ggOut <- arrangeGrob(ggOut, ggLeg, ggCol, heights = c(1, 7, 2), layout_matrix = rbind(c(3), c(1), c(2))) 
-    }} else {{
-      ggOut <- arrangeGrob(ggOut, ggLeg, heights = c(7, 2), layout_matrix = rbind(c(1), c(2))) 
-    }}
+    ggOut <- wrap_plots(ggOut, ggplotify::as.ggplot(ggLeg))+
+      plot_layout(ncol = 1, heights = c(7,2))
   }}
   
   return(ggOut)
@@ -1547,8 +1539,7 @@ output${prefix}_hea_oup.png <- downloadHandler(
   filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_hea_plt,"_",input${prefix}_hea_grp,".png")) }},
   content = function(file) {{
     ggsave(
-    file, device = "png", bg = "white", dpi = input${prefix}_hea_oup.res,
-    plot = scBubbHeat({prefix}conf, {prefix}meta, input${prefix}_hea_inp, input${prefix}_hea_grp, input${prefix}_hea_plt, input${prefix}_hea_sub1, input${prefix}_hea_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_hea_scl, input${prefix}_hea_row, input${prefix}_hea_col, input${prefix}_hea_cols, input${prefix}_hea_fsz, save = TRUE)
+    file, device = "png", bg = "white", height = input${prefix}_hea_oup.height, width = input${prefix}_hea_oup.width, units = "cm", dpi = input${prefix}_hea_oup.res, plot = scBubbHeat({prefix}conf, {prefix}meta, input${prefix}_hea_inp, input${prefix}_hea_grp, input${prefix}_hea_plt, input${prefix}_hea_sub1, input${prefix}_hea_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_hea_scl, input${prefix}_hea_row, input${prefix}_hea_col, input${prefix}_hea_cols, input${prefix}_hea_fsz)
     )
 }})
 
@@ -1556,8 +1547,7 @@ output${prefix}_hea_oup.pdf <- downloadHandler(
   filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_hea_plt,"_",input${prefix}_hea_grp,".pdf")) }},
   content = function(file) {{
     ggsave(
-    file, device = "pdf", useDingbats = FALSE, bg = "white",
-    plot = scBubbHeat({prefix}conf, {prefix}meta, input${prefix}_hea_inp, input${prefix}_hea_grp, input${prefix}_hea_plt, input${prefix}_hea_sub1, input${prefix}_hea_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_hea_scl, input${prefix}_hea_row, input${prefix}_hea_col, input${prefix}_hea_cols, input${prefix}_hea_fsz, save = TRUE)
+    file, device = "pdf", useDingbats = FALSE, bg = "white", height = input${prefix}_hea_oup.height, width = input${prefix}_hea_oup.width, units = "cm", plot = scBubbHeat({prefix}conf, {prefix}meta, input${prefix}_hea_inp, input${prefix}_hea_grp, input${prefix}_hea_plt, input${prefix}_hea_sub1, input${prefix}_hea_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_hea_scl, input${prefix}_hea_row, input${prefix}_hea_col, input${prefix}_hea_cols, input${prefix}_hea_fsz)
     )
 }})
 
@@ -1565,8 +1555,8 @@ output${prefix}_hea_oup.svg <- downloadHandler(
   filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_hea_plt,"_",input${prefix}_hea_grp,".svg")) }},
   content = function(file) {{
     ggsave(
-    file, device = "svg", bg = "white",
-    plot = scBubbHeat({prefix}conf, {prefix}meta, input${prefix}_hea_inp, input${prefix}_hea_grp, input${prefix}_hea_plt, input${prefix}_hea_sub1, input${prefix}_hea_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_hea_scl, input${prefix}_hea_row, input${prefix}_hea_col, input${prefix}_hea_cols, input${prefix}_hea_fsz, save = TRUE)
+    file, device = "svg", bg = "white", height = input${prefix}_hea_oup.height, width = input${prefix}_hea_oup.width, units = "cm", 
+    plot = scBubbHeat({prefix}conf, {prefix}meta, input${prefix}_hea_inp, input${prefix}_hea_grp, input${prefix}_hea_plt, input${prefix}_hea_sub1, input${prefix}_hea_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_hea_scl, input${prefix}_hea_row, input${prefix}_hea_col, input${prefix}_hea_cols, input${prefix}_hea_fsz)
     )
 }}) # End of tab hea      
        
@@ -2790,7 +2780,7 @@ tabPanel(
       fluidRow(
         class = "tab-section",
         column(
-          3,
+          4,
           div(
             class = "input-panel",
             textAreaInput("{prefix}_hea_inp", "Gene names",
@@ -2859,7 +2849,17 @@ tabPanel(
           ),
           div(
             class = "input-panel",
-            numericInput("{prefix}_hea_oup.res", "Resolution:", min = 72, max = 600, value = 150, step = 5),
+            fluidRow(
+              column(4,
+                     numericInput("{prefix}_hea_oup.height", "Height:", min = 5, max = 100, value = 18, step = 2)
+              ),
+              column(4,
+                     numericInput("{prefix}_hea_oup.width", "Width:", min = 5, max = 100, value = 18, step = 2)
+              ),
+              column(4,
+                     numericInput("{prefix}_hea_oup.res", "Res:", min = 72, max = 600, value = 150, step = 5)
+              )
+            ),
             downloadButton("{prefix}_hea_oup.png", "Download PNG", class = "btn-sm"),
             downloadButton("{prefix}_hea_oup.pdf", "Download PDF", class = "btn-sm"),
             downloadButton("{prefix}_hea_oup.svg", "Download SVG", class = "btn-sm")
@@ -2867,7 +2867,7 @@ tabPanel(
         ), # row 2 col 1
         # row 2 col 2
         column(
-          9, h4(htmlOutput("{prefix}_hea_oupTxt")),
+          8, h4(htmlOutput("{prefix}_hea_oupTxt")),
           uiOutput("{prefix}_hea_oup.ui")
         ) # row 2 col 2
       ), # row 2

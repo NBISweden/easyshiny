@@ -17,7 +17,7 @@
 #' @param theme Bootsrap theme
 #' @param tabs Vector of tab names to include
 #' @param about Should about page be added as a tab?
-#' @param font Google font for plots
+#' @param font Google font for plots. Defaults to "Lato".
 #' @param ganalytics Google analytics tracking ID (e.g. "UA-123456789-0")
 #'
 #' @return server.R and ui.R required for shiny app
@@ -30,7 +30,7 @@
 #'
 #' @export
 #' 
-make_code <- function(shiny.title, shiny.prefix, shiny.dir, enableSubset = TRUE, defPtSiz = 1.25, theme = "flatly", tabs = c("civge", "civci", "gevge", "gem", "gec", "vio", "pro", "hea"), about = TRUE, font = "Lato", ganalytics = NA) {
+make_code <- function(shiny.title = "App", shiny.prefix = "sc1", shiny.dir = "app", enableSubset = TRUE, defPtSiz = 1.25, theme = "flatly", tabs = c("civge", "civci", "gevge", "gem", "gec", "vio", "pro", "hea"), about = TRUE, font = "Lato", ganalytics = NA) {
   
   tbs <- c("civge", "civci", "gevge", "gem", "gec", "vio", "pro", "hea", "mar")
   if(length(tabs) < 1) stop("At least 1 tab must be specified.")
@@ -42,7 +42,7 @@ make_code <- function(shiny.title, shiny.prefix, shiny.dir, enableSubset = TRUE,
     subst <- ""
   }
   defPtSiz <- as.character(defPtSiz)
-  slibs <- c("shiny", "shinyhelper", "data.table", "Matrix", "DT", "magrittr", "ggplot2", "ggplotify", "ggrepel", "hdf5r", "ggdendro", "gridExtra", "shinycssloaders")
+  slibs <- c("shiny", "shinyhelper", "data.table", "Matrix", "DT", "magrittr", "ggplot2", "ggplotify", "ggrepel", "hdf5r", "ggdendro", "grid", "shinycssloaders", "patchwork")
   ulibs <- c("shiny", "shinyhelper", "shinythemes", "showtext", "data.table", "Matrix", "DT", "magrittr")
 
   ### Write code for server.R
