@@ -1818,15 +1818,11 @@ tabPanel(
                 ) %>%
                   helper(
                     type = "inline", size = "m", fade = TRUE,
-                    title = "Cell info to colour cells by",
+                    title = "Cell info to colour cells",
                     content = c(
-                      "Select cell info to colour cells",
+                      "- Select cell info to colour cells",
                       "- Categorical covariates have a fixed colour palette",
-                      paste0(
-                        "- Continuous covariates are coloured in a ",
-                        "Blue-Yellow-Red colour scheme, which can be ",
-                        "changed in the plot controls"
-                      )
+                      "- Continuous covariates are coloured in a Blue-Yellow-Red colour scheme, which can be changed in the plot controls"
                     )
                   )
               )
@@ -1897,14 +1893,11 @@ tabPanel(
                 selectInput("{prefix}_civge_inp2", "Gene name:", choices = NULL) %>%
                   helper(
                     type = "inline", size = "m", fade = TRUE,
-                    title = "Gene expression to colour cells by",
+                    title = "Gene expression to colour cells",
                     content = c(
-                      "Select gene to colour cells by gene expression",
-                      paste0(
-                        "- Gene expression are coloured in a ",
-                        "White-Red colour scheme which can be ",
-                        "changed in the plot controls"
-                      )
+                      "- Select gene to colour cells by gene expression",
+                      "- Type in gene names for unlisted genes",
+                      "- Gene expression are coloured in a White-Red colour scheme which can be changed in the plot controls"
                     )
                   )
               )
@@ -2062,15 +2055,11 @@ tabPanel(
                 ) %>%
                   helper(
                     type = "inline", size = "m", fade = TRUE,
-                    title = "Cell info to colour cells by",
+                    title = "Cell info to colour cells",
                     content = c(
-                      "Select cell info to colour cells",
+                      "- Select cell info to colour cells",
                       "- Categorical covariates have a fixed colour palette",
-                      paste0(
-                        "- Continuous covariates are coloured in a ",
-                        "Blue-Yellow-Red colour scheme, which can be ",
-                        "changed in the plot controls"
-                      )
+                      "- Continuous covariates are coloured in a Blue-Yellow-Red colour scheme, which can be changed in the plot controls"
                     )
                   )
               )
@@ -2130,15 +2119,11 @@ tabPanel(
                 ) %>%
                   helper(
                     type = "inline", size = "m", fade = TRUE,
-                    title = "Cell info to colour cells by",
+                    title = "Cell info to colour cells",
                     content = c(
-                      "Select cell info to colour cells",
+                      "- Select cell info to colour cells",
                       "- Categorical covariates have a fixed colour palette",
-                      paste0(
-                        "- Continuous covariates are coloured in a ",
-                        "Blue-Yellow-Red colour scheme, which can be ",
-                        "changed in the plot controls"
-                      )
+                      "- Continuous covariates are coloured in a Blue-Yellow-Red colour scheme, which can be changed in the plot controls"
                     )
                   )
               )
@@ -2289,14 +2274,11 @@ tabPanel(
                 selectInput("{prefix}_gevge_inp1", "Gene name:", choices = NULL) %>%
                   helper(
                     type = "inline", size = "m", fade = TRUE,
-                    title = "Gene expression to colour cells by",
+                    title = "Gene expression to colour cells",
                     content = c(
-                      "Select gene to colour cells by gene expression",
-                      paste0(
-                        "- Gene expression are coloured in a ",
-                        "White-Red colour scheme which can be ",
-                        "changed in the plot controls"
-                      )
+                      "- Select gene to colour cells by gene expression",
+                      "- Type in gene names for unlisted genes",
+                      "- Gene expression are coloured in a White-Red colour scheme which can be changed in the plot controls"
                     )
                   )
               )
@@ -2355,14 +2337,11 @@ tabPanel(
                 selectInput("{prefix}_gevge_inp2", "Gene name:", choices = NULL) %>%
                   helper(
                     type = "inline", size = "m", fade = TRUE,
-                    title = "Gene expression to colour cells by",
+                    title = "Gene expression to colour cells",
                     content = c(
-                      "Select gene to colour cells by gene expression",
-                      paste0(
-                        "- Gene expression are coloured in a ",
-                        "White-Red colour scheme which can be ",
-                        "changed in the plot controls"
-                      )
+                      "- Select gene to colour cells by gene expression",
+                      "- Type in gene names for unlisted genes",
+                      "- Gene expression are coloured in a White-Red colour scheme which can be changed in the plot controls"
                     )
                   )
               )
@@ -2456,27 +2435,21 @@ tabPanel(
                    selectInput("{prefix}_gec_inp1", "Gene 1:", choices = NULL) %>%
                      helper(
                        type = "inline", size = "m", fade = TRUE,
-                       title = "Gene expression to colour cells by",
+                       title = "Gene expression to colour cells",
                        content = c(
-                         "Select gene to colour cells by gene expression",
-                         paste0(
-                           "- Gene expression are coloured in a ",
-                           "White-Red colour scheme which can be ",
-                           "changed in the plot controls"
-                         )
+                         "- Select gene to colour cells by gene expression",
+                         "- Type in gene names for unlisted genes",
+                         "- Gene expression are coloured in a White-Red colour scheme which can be changed in the plot controls"
                        )
                      ),
                    selectInput("{prefix}_gec_inp2", "Gene 2:", choices = NULL) %>%
                      helper(
                        type = "inline", size = "m", fade = TRUE,
-                       title = "Gene expression to colour cells by",
+                       title = "Gene expression to colour cells",
                        content = c(
-                         "Select gene to colour cells by gene expression",
-                         paste0(
-                           "- Gene expression are coloured in a ",
-                           "White-Blue colour scheme which can be ",
-                           "changed in the plot controls"
-                         )
+                         "- Select gene to colour cells by gene expression",
+                         "- Type in gene names for unlisted genes",
+                         "- Gene expression are coloured in a White-Blue colour scheme which can be changed in the plot controls"
                        )
                      ),
                    {subst}checkboxInput("{prefix}_gec_togL", "Subset cells"),
@@ -2581,9 +2554,9 @@ tabPanel(
             ) %>%
               helper(
                 type = "inline", size = "m", fade = TRUE,
-                title = "Cell info to group cells by",
+                title = "Cell info to group cells",
                 content = c(
-                  "Select categorical cell info to group cells by",
+                  "- Select categorical cell info to group cells by",
                   "- Single cells are grouped by this categorical covariate",
                   "- Plotted as the X-axis of the violin plot / box plot"
                 )
@@ -2593,9 +2566,10 @@ tabPanel(
                 type = "inline", size = "m", fade = TRUE,
                 title = "Cell Info / Gene to plot",
                 content = c(
-                  "Select cell info / gene to plot on Y-axis",
+                  "- Select cell info / gene to plot on Y-axis",
                   "- Can be continuous cell info (e.g. nUMIs / scores)",
-                  "- Can also be gene expression"
+                  "- Can also be gene expression",
+                  "- Type in gene names for unlisted genes"
                 )
               ),
             radioButtons("{prefix}_vio_typ", "Plot type:",
@@ -2689,9 +2663,9 @@ tabPanel(
             ) %>%
               helper(
                 type = "inline", size = "m", fade = TRUE,
-                title = "Cell info to plot cells by",
+                title = "Cell info to group cells",
                 content = c(
-                  "Select categorical cell info to plot cells by",
+                  "- Select categorical cell info to group cells",
                   "- Plotted as the X-axis of the proportion plot"
                 )
               ),
@@ -2701,9 +2675,9 @@ tabPanel(
             ) %>%
               helper(
                 type = "inline", size = "m", fade = TRUE,
-                title = "Cell info to group / colour cells by",
+                title = "Cell info to group / colour cells",
                 content = c(
-                  "Select categorical cell info to group / colour cells by",
+                  "- Select categorical cell info to group / colour cells",
                   "- Proportion / cell numbers are shown in different colours"
                 )
               ),
@@ -2791,7 +2765,7 @@ tabPanel(
                 type = "inline", size = "m", fade = TRUE,
                 title = "List of genes to plot on bubbleplot / heatmap",
                 content = c(
-                  "Input genes to plot",
+                  "- Input genes to plot",
                   "- Maximum 50 genes (due to ploting space limitations)",
                   "- Genes should be separated by comma, semicolon or newline"
                 )
@@ -2802,9 +2776,9 @@ tabPanel(
             ) %>%
               helper(
                 type = "inline", size = "m", fade = TRUE,
-                title = "Cell info to group cells by",
+                title = "Cell info to group cells",
                 content = c(
-                  "Select categorical cell info to group cells by",
+                  "- Select categorical cell info to group cells",
                   "- Single cells are grouped by this categorical covariate",
                   "- Plotted as the X-axis of the bubbleplot / heatmap"
                 )
@@ -2915,7 +2889,7 @@ tabPanel(
                 type = "inline", size = "m", fade = TRUE,
                 title = "List of genes to plot on bubbleplot / heatmap",
                 content = c(
-                  "Input genes to plot",
+                  "- Input genes to plot",
                   "- Maximum 16 genes (due to ploting space limitations)",
                   "- Genes should be separated by comma, semicolon or newline"
                 )
