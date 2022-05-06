@@ -841,7 +841,7 @@ scProp <- function(inpConf, inpMeta, inp1, inp2, inpsub1, inpsub2, inptyp, inpfl
 # Get gene list
 scGeneList <- function(inp, inpGene) {{
   geneList <- data.table(
-  gene = unique(trimws(strsplit(inp, ",|;|\n")[[1]])),
+  gene = inp,
   present = TRUE
   )
   geneList[!gene %in% names(inpGene)]$present <- FALSE
@@ -1519,11 +1519,6 @@ output${prefix}_hea_oupTxt <- renderUI({{
   geneList = scGeneList(input${prefix}_hea_inp, {prefix}gene)
   if(nrow(geneList) > 50){{
     HTML("More than 50 input genes! Please reduce the gene list!")
-  }} else {{
-    if(nrow(geneList[present == FALSE]) > 0){{
-      oup = paste0(nrow(geneList[present == FALSE]), " genes not found (", paste0(geneList[present == FALSE]$gene, collapse = ", "), ")")
-      HTML(paste0("<span class=\'text-danger\'>",oup,"</span>"))
-    }}
   }}
 }})
 
@@ -1659,6 +1654,12 @@ updateSelectizeInput(session, "{prefix}_gec_inp1", choices = names({prefix}gene)
 updateSelectizeInput(session, "{prefix}_gec_inp2", choices = names({prefix}gene), server = TRUE,
                      selected = {prefix}def$gene2, options = list(
                        maxOptions = 7, create = TRUE, persist = TRUE, render = I(optCrt)))
+updateSelectizeInput(session, "{prefix}_gem_inp", choices = names({prefix}gene), server = TRUE,
+                     selected = {prefix}def$genes[1:9], options = list(
+                     create = TRUE, persist = TRUE, render = I(optCrt)))
+updateSelectizeInput(session, "{prefix}_hea_inp", choices = names({prefix}gene), server = TRUE,
+                     selected = {prefix}def$genes[1:12], options = list(
+                     create = TRUE, persist = TRUE, render = I(optCrt)))
 updateSelectizeInput(session, "{prefix}_vio_inp2", server = TRUE,
                      choices = c({prefix}conf[is.na(fID)]$UI,names({prefix}gene)),
                      selected = {prefix}conf[is.na(fID)]$UI[1], options = list(
@@ -2757,17 +2758,13 @@ tabPanel(
           4,
           div(
             class = "input-panel",
-            textAreaInput("{prefix}_hea_inp", "Gene names",
-              height = "100px",
-              value = paste0({prefix}def$genes, collapse = ", ")
-            ) %>%
+            selectInput("{prefix}_hea_inp", "Genes:", choices = NULL, multiple = TRUE) %>%
               helper(
                 type = "inline", size = "m", fade = TRUE,
                 title = "List of genes to plot on bubbleplot / heatmap",
                 content = c(
                   "- Input genes to plot",
-                  "- Maximum 50 genes (due to ploting space limitations)",
-                  "- Genes should be separated by comma, semicolon or newline"
+                  "- Type in gene names for unlisted genes"
                 )
               ),
             selectInput("{prefix}_hea_grp", "Group by:",
@@ -2881,17 +2878,13 @@ tabPanel(
           12,
           div(
             class = "input-panel input-panel-section",
-            textAreaInput("{prefix}_gem_inp", "Gene names:",
-                          height = "100px",
-                          value = paste0({prefix}def$genes, collapse = ", ")
-            ) %>%
+            selectInput("{prefix}_gem_inp", "Genes:", choices = NULL, multiple = TRUE) %>%
               helper(
                 type = "inline", size = "m", fade = TRUE,
                 title = "List of genes to plot on bubbleplot / heatmap",
                 content = c(
                   "- Input genes to plot",
-                  "- Maximum 16 genes (due to ploting space limitations)",
-                  "- Genes should be separated by comma, semicolon or newline"
+                  "- Type in gene names for unlisted genes"
                 )
               ),
             selectInput("{prefix}_gem_drX", "X-axis:",
