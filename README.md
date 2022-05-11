@@ -2,7 +2,7 @@
 
 `easyshiny` is a R package to quickly create an interactive web application to visualise and explore single-cell data.
 
-# Installation
+## Installation
 
 Run the following code to check if the dependency packages required are installed, else install them if required:
 
@@ -22,7 +22,7 @@ if(length(newPkg)){install.packages(newPkg)}
 remotes::install_github("royfrancis/easyshiny", ref="dual-nofont")
 ```
 
-# Usage
+## Usage
 
 To generate and launch the app using a **Seurat** file, here is an example using built-in data from the Seurat package.
 
@@ -53,41 +53,41 @@ shiny::runApp("app")
 
 ![](images/multi.png)
 
-# Screenshots
+## Screenshots
 
 ![](images/single-cellinfo-geneexp.png)
 
-Cell information vs gene expression.
+*Cell information vs gene expression.*
 
-![](single-cellinfo-cellinfo.png)
+![](images/single-cellinfo-cellinfo.png)
 
-Cell information vs cell information.
+*Cell information vs cell information.*
 
 ![](images/single-geneexp-geneexp.png)
 
-Gene expression vs gene expression
+*Gene expression vs gene expression.*
 
 ![](images/single-gene-coexp.png)
 
-Gene co-expression.
+*Gene co-expression.*
 
 ![](images/single-proportion.png)
 
-Proportion plot.
+*Proportion plot.*
 
 ![](images/single-bubble.png)
 
-Bubble plot.
+*Bubble plot.*
 
 ![](images/single-violin.png)
 
-Violin plot.
+*Violin plot.*
 
-# Acknowledgements
+## Acknowledgements
 
-This project is built on [ShinyCell](https://github.com/SGDDNB/ShinyCell). Go there to get more details and citation.
+This project is built on [ShinyCell](https://github.com/SGDDNB/ShinyCell).
 
-# Issues
+## Issues
 
 Report issues [here](https://github.com/royfrancis/easyshiny/issues).
 
