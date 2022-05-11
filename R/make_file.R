@@ -339,6 +339,9 @@ make_file <- function(
   }
   
   chk = chunkSize
+  while(chk > (gex1.matdim[1]-8)){
+    chk = floor(chk / 2)     # Account for cases where nGene < chunkSize
+  }
   if(class(obj)[1] == "Seurat"){
     # Seurat Object
     for(i in 1:floor((gex1.matdim[1]-8)/chk)){
