@@ -14,6 +14,7 @@ make_app(
   gene.mapping = FALSE,
   shiny.title = "scRNA-seq shiny app",
   shiny.dir = "shinyApp/",
+  shiny.prefix = "sc1",
   enableSubset = TRUE,
   defPtSiz = 1.25,
   ganalytics = NA,
@@ -65,6 +66,8 @@ to the actual gene identifiers in the gene expression matrix and
 
 \item{shiny.dir}{specify directory to create the shiny app in. Default is
 to create a new directory named "shinyApp"}
+
+\item{shiny.prefix}{specify file prefix}
 
 \item{enableSubset}{specify whether to enable "Toggle to subset cells"
 functionality in the shiny app. Default is to enable this functionality}

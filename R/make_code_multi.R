@@ -53,7 +53,7 @@ make_code_multi <- function(shiny.title, shiny.prefix, shiny.headers, shiny.dir,
     defPtSiz <- rep(defPtSiz[1], length(shiny.prefix))
   }
   defPtSiz <- as.character(defPtSiz)
-  slibs <- c("shiny", "shinyhelper", "data.table", "Matrix", "DT", "magrittr", "ggplot2", "ggplotify", "ggrepel", "hdf5r", "ggdendro", "gridExtra", "shinycssloaders")
+  slibs <- c("shiny", "shinyhelper", "data.table", "Matrix", "DT", "magrittr", "ggplot2", "ggplotify", "ggrepel", "hdf5r", "ggdendro", "grid", "shinycssloaders","patchwork")
   ulibs <- c("shiny", "shinyhelper", "shinythemes", "showtext", "data.table", "Matrix", "DT", "magrittr")
 
 
@@ -66,7 +66,7 @@ make_code_multi <- function(shiny.title, shiny.prefix, shiny.headers, shiny.dir,
   }
   readr::write_file(wr_sv_fix(font = font), append = TRUE, file = fname)
   for (i in shiny.prefix) {
-    readr::write_file(wr_sv_main(i, subst, tabs = tabs), append = TRUE, file = fname)
+    readr::write_file(wr_sv_main(i, subst, font = font, tabs = tabs), append = TRUE, file = fname)
   }
   readr::write_file(wr_sv_end(), append = TRUE, file = fname)
 

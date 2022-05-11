@@ -14,7 +14,7 @@
 #'
 #' @author John F. Ouyang
 #'
-#' @import data.table ggplot2 RColorBrewer grid gridExtra
+#' @import data.table ggplot2 RColorBrewer
 #'
 #' @examples
 #' \dontrun{
@@ -23,8 +23,6 @@
 #' # Can also save the legend for plotting later
 #' scLegend = show_legend(scConf)
 #' leg = do.call(gtable_rbind, scLegend)
-#' grid.newpage()
-#' grid.draw(leg)
 #' }
 #' 
 #' @export
@@ -68,9 +66,8 @@ show_legend <- function(scConf, fontSize = 14){
   scLegend[["continuous"]] = ggLeg
 
   # Plot all legends
-  legMulti = do.call(gtable_rbind, scLegend)
-  grid.newpage()
-  grid.draw(legMulti)
+  legMulti = lapply(scLegend, ggplotify::as.ggplot)
+  print(patchwork::wrap_plots(legMulti, ncol=1))
 
   return(scLegend)
 }

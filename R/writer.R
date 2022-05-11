@@ -52,7 +52,7 @@ glue::glue(x,"\n")
 wr_sv_fix <- function(font = "Lato") {
   glue::glue('
 
-### Useful stuff ----
+### Initialise variables and functions ----
 
 # Colour palette
 cList <- list(
@@ -244,7 +244,7 @@ scFeature <- function(inpConf, inpMeta, inpdrX, inpdrY, inp, inpsub1, inpsub2, i
   }}
 
   if(inpncol < 1) inpncol <- floor(sqrt(length(plist)))
-  ggOut <- ggplotify::as.ggplot(arrangeGrob(grobs = plist, ncol = inpncol))
+  ggOut <- wrap_plots(plist) + plot_layout(ncol = inpncol)
   return(ggOut)
 }}
 
@@ -496,7 +496,8 @@ scDRcoexFull <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inp2, inpsub1,
                        inpsub2, inpH5, inpGene, inpsiz, inpcol, inpord, inpfsz,
                        inpasp, inptxt)
   g2 <- scDRcoexLeg(inp1, inp2, inpcol, inpfsz)
-  return(ggplotify::as.ggplot(gridExtra::arrangeGrob(g1, g2, nrow = 1, ncol = 2, widths = c(5, 2))))
+  g <- wrap_plots(g1, g2) + plot_layout(ncol = 2, nrow = 1, widths = c(10, 2))
+  return(g)
 }}
 
 # @description Gene Co-expression on dimred
@@ -840,7 +841,7 @@ scProp <- function(inpConf, inpMeta, inp1, inp2, inpsub1, inpsub2, inptyp, inpfl
 # Get gene list
 scGeneList <- function(inp, inpGene) {{
   geneList <- data.table(
-  gene = unique(trimws(strsplit(inp, ",|;|\n")[[1]])),
+  gene = inp,
   present = TRUE
   )
   geneList[!gene %in% names(inpGene)]$present <- FALSE
@@ -864,9 +865,8 @@ scGeneList <- function(inp, inpGene) {{
 # @param inpcols
 # @param inpfsz (Character) Custom font size
 # @param col_line (Character) Line colour
-# @param save
 #
-scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpPlt, inpsub1, inpsub2, inpH5, inpGene, inpScl, inpRow, inpCol, inpcols, inpfsz, col_line = "grey60", save = FALSE) {{
+scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpPlt, inpsub1, inpsub2, inpH5, inpGene, inpScl, inpRow, inpCol, inpcols, inpfsz, col_line = "grey60") {{
   
   if (is.null(inpsub1)) {{ inpsub1 <- inpConf$UI[1] }}
 
@@ -989,27 +989,19 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpPlt, inpsub1, inpsub2, 
   # Final tidy
   ggLeg <- g_legend(ggOut)
   ggOut <- ggOut + theme(legend.position = "none")
-  if (!save) {{ 
-    if (inpRow & inpCol) {{
-      ggOut <- grid.arrange(ggOut, ggLeg, ggCol, ggRow, widths = c(7, 1), heights = c(1, 7, 2), layout_matrix = rbind(c(3, NA), c(1, 4), c(2, NA)))
-    }} else if (inpRow) {{
-      ggOut <- grid.arrange(ggOut, ggLeg, ggRow, widths = c(7, 1), heights = c(7, 2), layout_matrix = rbind(c(1, 3), c(2, NA)))
-    }} else if (inpCol) {{ 
-      ggOut <- grid.arrange(ggOut, ggLeg, ggCol, heights = c(1, 7, 2), layout_matrix = rbind(c(3), c(1), c(2))) 
-    }} else {{
-      ggOut <- grid.arrange(ggOut, ggLeg, heights = c(7, 2), layout_matrix = rbind(c(1), c(2))
-      ) 
-    }}
+  
+  if (inpRow & inpCol) {{
+    ggOut <- wrap_plots(ggCol, plot_spacer(), ggOut, ggRow, ggplotify::as.ggplot(ggLeg))+
+              plot_layout(ncol = 2, widths = c(7,1), heights = c(1,7,2))
+  }} else if (inpRow) {{
+    ggOut <- wrap_plots(ggOut, ggRow, ggplotify::as.ggplot(ggLeg))+
+              plot_layout(ncol = 2, widths = c(7,1), heights = c(7,2))
+  }} else if (inpCol) {{
+    ggOut <- wrap_plots(ggCol, ggOut, ggplotify::as.ggplot(ggLeg))+
+               plot_layout(ncol = 1, heights = c(1,7,2))
   }} else {{
-    if (inpRow & inpCol) {{
-      ggOut <- arrangeGrob(ggOut, ggLeg, ggCol, ggRow, widths = c(7, 1), heights = c(1, 7, 2), layout_matrix = rbind(c(3, NA), c(1, 4), c(2, NA))) 
-    }} else if (inpRow) {{
-      ggOut <- arrangeGrob(ggOut, ggLeg, ggRow, widths = c(7, 1), heights = c(7, 2), layout_matrix = rbind(c(1, 3), c(2, NA))) 
-    }} else if (inpCol) {{ 
-      ggOut <- arrangeGrob(ggOut, ggLeg, ggCol, heights = c(1, 7, 2), layout_matrix = rbind(c(3), c(1), c(2))) 
-    }} else {{
-      ggOut <- arrangeGrob(ggOut, ggLeg, heights = c(7, 2), layout_matrix = rbind(c(1), c(2))) 
-    }}
+    ggOut <- wrap_plots(ggOut, ggplotify::as.ggplot(ggLeg))+
+      plot_layout(ncol = 1, heights = c(7,2))
   }}
   
   return(ggOut)
@@ -1054,20 +1046,29 @@ output${prefix}_civge_oup1.ui <- renderUI({{
   show_progress(imageOutput("{prefix}_civge_oup1", height = pList[input${prefix}_civge_psz]))
 }})
 
-output${prefix}_civge_oup1.pdf <- downloadHandler(
- filename = function() {{ paste0("{prefix}", input${prefix}_civge_drX,"_", input${prefix}_civge_drY,"_", input${prefix}_civge_inp1,".pdf") }},
+output${prefix}_civge_oup1.png <- downloadHandler(
+ filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_civge_drX, "_", input${prefix}_civge_drY, "_", input${prefix}_civge_inp1, ".png")) }},
  content = function(file) {{
    ggsave(
-   file, device = "pdf", useDingbats = FALSE, bg = "white",
+   file, device = "png", dpi = input${prefix}_civge_oup1.res, bg = "white",
    plot = scDRcell({prefix}conf, {prefix}meta, input${prefix}_civge_drX, input${prefix}_civge_drY, input${prefix}_civge_inp1,   input${prefix}_civge_sub1, input${prefix}_civge_sub2, input${prefix}_civge_siz, input${prefix}_civge_col1, input${prefix}_civge_ord1,  input${prefix}_civge_fsz, input${prefix}_civge_asp, input${prefix}_civge_txt, input${prefix}_civge_lab1)
    )
 }})
 
-output${prefix}_civge_oup1.png <- downloadHandler(
- filename = function() {{ paste0("{prefix}",input${prefix}_civge_drX,"_",input${prefix}_civge_drY,"_", input${prefix}_civge_inp1,".png") }},
+output${prefix}_civge_oup1.pdf <- downloadHandler(
+ filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_civge_drX,"_", input${prefix}_civge_drY,"_", input${prefix}_civge_inp1,".pdf")) }},
  content = function(file) {{
    ggsave(
-   file, device = "png", dpi = input${prefix}_civge_oup1.res, bg = "white",
+   file, device = "pdf", useDingbats = FALSE, bg = "white", onefile = TRUE,
+   plot = scDRcell({prefix}conf, {prefix}meta, input${prefix}_civge_drX, input${prefix}_civge_drY, input${prefix}_civge_inp1,   input${prefix}_civge_sub1, input${prefix}_civge_sub2, input${prefix}_civge_siz, input${prefix}_civge_col1, input${prefix}_civge_ord1,  input${prefix}_civge_fsz, input${prefix}_civge_asp, input${prefix}_civge_txt, input${prefix}_civge_lab1)
+   )
+}})
+
+output${prefix}_civge_oup1.svg <- downloadHandler(
+ filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_civge_drX,"_", input${prefix}_civge_drY,"_", input${prefix}_civge_inp1,".svg")) }},
+ content = function(file) {{
+   ggsave(
+   file, device = "svg", bg = "white",
    plot = scDRcell({prefix}conf, {prefix}meta, input${prefix}_civge_drX, input${prefix}_civge_drY, input${prefix}_civge_inp1,   input${prefix}_civge_sub1, input${prefix}_civge_sub2, input${prefix}_civge_siz, input${prefix}_civge_col1, input${prefix}_civge_ord1,  input${prefix}_civge_fsz, input${prefix}_civge_asp, input${prefix}_civge_txt, input${prefix}_civge_lab1)
    )
 }})
@@ -1088,21 +1089,30 @@ output${prefix}_civge_oup2.ui <- renderUI({{
  show_progress(imageOutput("{prefix}_civge_oup2", height = pList[input${prefix}_civge_psz]))
 }})
 
-output${prefix}_civge_oup2.pdf <- downloadHandler(
- filename = function() {{ paste0("{prefix}",input${prefix}_civge_drX,"_",input${prefix}_civge_drY,"_", input${prefix}_civge_inp2,".pdf") }},
- content = function(file) {{
-   ggsave(
-   file, device = "pdf", useDingbats = FALSE, bg = "white",
-   plot = scDRgene({prefix}conf, {prefix}meta, input${prefix}_civge_drX, input${prefix}_civge_drY, input${prefix}_civge_inp2,  input${prefix}_civge_sub1, input${prefix}_civge_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_civge_siz, input${prefix}_civge_col2, input${prefix}_civge_ord2, input${prefix}_civge_fsz, input${prefix}_civge_asp, input${prefix}_civge_txt)
-   )
-}})
-
 output${prefix}_civge_oup2.png <- downloadHandler(
- filename = function() {{ paste0("{prefix}",input${prefix}_civge_drX,"_",input${prefix}_civge_drY,"_", input${prefix}_civge_inp2,".png") }},
+ filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_civge_drX,"_",input${prefix}_civge_drY,"_", input${prefix}_civge_inp2,".png")) }},
  content = function(file) {{
    ggsave(
    file, device = "png", dpi = input${prefix}_civge_oup2.res, bg = "white",
    plot = scDRgene({prefix}conf, {prefix}meta, input${prefix}_civge_drX, input${prefix}_civge_drY, input${prefix}_civge_inp2, input${prefix}_civge_sub1, input${prefix}_civge_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_civge_siz, input${prefix}_civge_col2, input${prefix}_civge_ord2, input${prefix}_civge_fsz, input${prefix}_civge_asp, input${prefix}_civge_txt)
+   )
+}})
+
+output${prefix}_civge_oup2.pdf <- downloadHandler(
+ filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_civge_drX,"_",input${prefix}_civge_drY,"_", input${prefix}_civge_inp2,".pdf")) }},
+ content = function(file) {{
+   ggsave(
+   file, device = "pdf", useDingbats = FALSE, bg = "white", onefile = TRUE,
+   plot = scDRgene({prefix}conf, {prefix}meta, input${prefix}_civge_drX, input${prefix}_civge_drY, input${prefix}_civge_inp2,  input${prefix}_civge_sub1, input${prefix}_civge_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_civge_siz, input${prefix}_civge_col2, input${prefix}_civge_ord2, input${prefix}_civge_fsz, input${prefix}_civge_asp, input${prefix}_civge_txt)
+   )
+}}) 
+
+output${prefix}_civge_oup2.svg <- downloadHandler(
+ filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_civge_drX,"_",input${prefix}_civge_drY,"_", input${prefix}_civge_inp2,".svg")) }},
+ content = function(file) {{
+   ggsave(
+   file, device = "svg", bg = "white",
+   plot = scDRgene({prefix}conf, {prefix}meta, input${prefix}_civge_drX, input${prefix}_civge_drY, input${prefix}_civge_inp2,  input${prefix}_civge_sub1, input${prefix}_civge_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_civge_siz, input${prefix}_civge_col2, input${prefix}_civge_ord2, input${prefix}_civge_fsz, input${prefix}_civge_asp, input${prefix}_civge_txt)
    )
 }}) # End of tab civge
 
@@ -1137,20 +1147,27 @@ output${prefix}_civci_oup1.ui <- renderUI({{
   show_progress(imageOutput("{prefix}_civci_oup1", height = pList[input${prefix}_civci_psz]))
 }})
 
-output${prefix}_civci_oup1.pdf <- downloadHandler(
-  filename = function() {{ paste0("{prefix}", input${prefix}_civci_drX, "_", input${prefix}_civci_drY, "_", input${prefix}_civci_inp1, ".pdf") }},
-  content = function(file) {{ ggsave(
-    file, device = "pdf", useDingbats = FALSE, bg = "white",
-    plot = scDRcell({prefix}conf, {prefix}meta, input${prefix}_civci_drX, input${prefix}_civci_drY, input${prefix}_civci_inp1, input${prefix}_civci_sub1, input${prefix}_civci_sub2, input${prefix}_civci_siz, input${prefix}_civci_col1, input${prefix}_civci_ord1, input${prefix}_civci_fsz, input${prefix}_civci_asp, input${prefix}_civci_txt, input${prefix}_civci_lab1) )
-}})
-
 output${prefix}_civci_oup1.png <- downloadHandler(
-  filename = function() {{ paste0("{prefix}", input${prefix}_civci_drX, "_", input${prefix}_civci_drY, "_", input${prefix}_civci_inp1, ".png") }},
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_civci_drX, "_", input${prefix}_civci_drY, "_", input${prefix}_civci_inp1, ".png")) }},
   content = function(file) {{
     ggsave(
     file, device = "png", dpi = input${prefix}_civci_oup1.res, bg = "white",
     plot = scDRcell({prefix}conf, {prefix}meta, input${prefix}_civci_drX, input${prefix}_civci_drY, input${prefix}_civci_inp1, input${prefix}_civci_sub1, input${prefix}_civci_sub2, input${prefix}_civci_siz, input${prefix}_civci_col1, input${prefix}_civci_ord1, input${prefix}_civci_fsz, input${prefix}_civci_asp, input${prefix}_civci_txt, input${prefix}_civci_lab1)
     )
+}})
+
+output${prefix}_civci_oup1.pdf <- downloadHandler(
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_civci_drX, "_", input${prefix}_civci_drY, "_", input${prefix}_civci_inp1, ".pdf")) }},
+  content = function(file) {{ ggsave(
+    file, device = "pdf", useDingbats = FALSE, bg = "white", onefile = TRUE,
+    plot = scDRcell({prefix}conf, {prefix}meta, input${prefix}_civci_drX, input${prefix}_civci_drY, input${prefix}_civci_inp1, input${prefix}_civci_sub1, input${prefix}_civci_sub2, input${prefix}_civci_siz, input${prefix}_civci_col1, input${prefix}_civci_ord1, input${prefix}_civci_fsz, input${prefix}_civci_asp, input${prefix}_civci_txt, input${prefix}_civci_lab1) )
+}})
+
+output${prefix}_civci_oup1.svg <- downloadHandler(
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_civci_drX, "_", input${prefix}_civci_drY, "_", input${prefix}_civci_inp1, ".svg")) }},
+  content = function(file) {{ ggsave(
+    file, device = "svg", bg = "white",
+    plot = scDRcell({prefix}conf, {prefix}meta, input${prefix}_civci_drX, input${prefix}_civci_drY, input${prefix}_civci_inp1, input${prefix}_civci_sub1, input${prefix}_civci_sub2, input${prefix}_civci_siz, input${prefix}_civci_col1, input${prefix}_civci_ord1, input${prefix}_civci_fsz, input${prefix}_civci_asp, input${prefix}_civci_txt, input${prefix}_civci_lab1) )
 }})
 
 output${prefix}_civci_oup2 <- renderPlot({{
@@ -1162,21 +1179,30 @@ output${prefix}_civci_oup2.ui <- renderUI({{
   show_progress(imageOutput("{prefix}_civci_oup2", height = pList[input${prefix}_civci_psz]))
 }})
 
-output${prefix}_civci_oup2.pdf <- downloadHandler(
-  filename = function() {{ paste0("{prefix}",input${prefix}_civci_drX,"_",input${prefix}_civci_drY,"_", input${prefix}_civci_inp2,".pdf") }},
-  content = function(file) {{
-    ggsave(
-    file, device = "pdf", useDingbats = FALSE, bg = "white",
-    plot = scDRcell({prefix}conf, {prefix}meta, input${prefix}_civci_drX, input${prefix}_civci_drY, input${prefix}_civci_inp2, input${prefix}_civci_sub1, input${prefix}_civci_sub2, input${prefix}_civci_siz, input${prefix}_civci_col2, input${prefix}_civci_ord2, input${prefix}_civci_fsz, input${prefix}_civci_asp, input${prefix}_civci_txt, input${prefix}_civci_lab2) 
-    )
-}})
-
 output${prefix}_civci_oup2.png <- downloadHandler(
-  filename = function() {{ paste0("{prefix}",input${prefix}_civci_drX,"_",input${prefix}_civci_drY,"_", input${prefix}_civci_inp2,".png") }},
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_civci_drX,"_",input${prefix}_civci_drY,"_", input${prefix}_civci_inp2,".png")) }},
   content = function(file) {{
     ggsave(
     file, device = "png", bg = "white", dpi = input${prefix}_civci_oup2.res,
     plot = scDRcell({prefix}conf, {prefix}meta, input${prefix}_civci_drX, input${prefix}_civci_drY, input${prefix}_civci_inp2, input${prefix}_civci_sub1, input${prefix}_civci_sub2, input${prefix}_civci_siz, input${prefix}_civci_col2, input${prefix}_civci_ord2, input${prefix}_civci_fsz, input${prefix}_civci_asp, input${prefix}_civci_txt, input${prefix}_civci_lab2)
+    )
+}}) 
+
+output${prefix}_civci_oup2.pdf <- downloadHandler(
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_civci_drX,"_",input${prefix}_civci_drY,"_", input${prefix}_civci_inp2,".pdf")) }},
+  content = function(file) {{
+    ggsave(
+    file, device = "pdf", useDingbats = FALSE, bg = "white", onefile = TRUE,
+    plot = scDRcell({prefix}conf, {prefix}meta, input${prefix}_civci_drX, input${prefix}_civci_drY, input${prefix}_civci_inp2, input${prefix}_civci_sub1, input${prefix}_civci_sub2, input${prefix}_civci_siz, input${prefix}_civci_col2, input${prefix}_civci_ord2, input${prefix}_civci_fsz, input${prefix}_civci_asp, input${prefix}_civci_txt, input${prefix}_civci_lab2) 
+    )
+}})
+
+output${prefix}_civci_oup2.svg <- downloadHandler(
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_civci_drX,"_",input${prefix}_civci_drY,"_", input${prefix}_civci_inp2,".svg")) }},
+  content = function(file) {{
+    ggsave(
+    file, device = "svg", bg = "white",
+    plot = scDRcell({prefix}conf, {prefix}meta, input${prefix}_civci_drX, input${prefix}_civci_drY, input${prefix}_civci_inp2, input${prefix}_civci_sub1, input${prefix}_civci_sub2, input${prefix}_civci_siz, input${prefix}_civci_col2, input${prefix}_civci_ord2, input${prefix}_civci_fsz, input${prefix}_civci_asp, input${prefix}_civci_txt, input${prefix}_civci_lab2) 
     )
 }}) # End of tab civci
 
@@ -1211,17 +1237,8 @@ output${prefix}_gevge_oup1.ui <- renderUI({{
   show_progress(imageOutput("{prefix}_gevge_oup1", height = pList[input${prefix}_gevge_psz]))
 }})
 
-output${prefix}_gevge_oup1.pdf <- downloadHandler(
-  filename = function() {{ paste0("{prefix}", input${prefix}_gevge_drX, "_", input${prefix}_gevge_drY, "_", input${prefix}_gevge_inp1, ".pdf") }},
-  content = function(file) {{
-    ggsave(
-    file, device = "pdf", useDingbats = FALSE, bg = "white",
-    plot = scDRgene({prefix}conf, {prefix}meta, input${prefix}_gevge_drX, input${prefix}_gevge_drY, input${prefix}_gevge_inp1, input${prefix}_gevge_sub1, input${prefix}_gevge_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_gevge_siz, input${prefix}_gevge_col1, input${prefix}_gevge_ord1, input${prefix}_gevge_fsz, input${prefix}_gevge_asp, input${prefix}_gevge_txt)
-    )
-}})
-
 output${prefix}_gevge_oup1.png <- downloadHandler(
-  filename = function() {{ paste0("{prefix}", input${prefix}_gevge_drX, "_", input${prefix}_gevge_drY, "_", input${prefix}_gevge_inp1,".png") }},
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_gevge_drX, "_", input${prefix}_gevge_drY, "_", input${prefix}_gevge_inp1,".png")) }},
   content = function(file) {{
     ggsave(
     file, device = "png", bg = "white", dpi = input${prefix}_gevge_oup1.res,
@@ -1230,6 +1247,24 @@ output${prefix}_gevge_oup1.png <- downloadHandler(
                     "{prefix}gexpr.h5", {prefix}gene,
                     input${prefix}_gevge_siz, input${prefix}_gevge_col1, input${prefix}_gevge_ord1,
                     input${prefix}_gevge_fsz, input${prefix}_gevge_asp, input${prefix}_gevge_txt)
+    )
+}})
+
+output${prefix}_gevge_oup1.pdf <- downloadHandler(
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_gevge_drX, "_", input${prefix}_gevge_drY, "_", input${prefix}_gevge_inp1, ".pdf")) }},
+  content = function(file) {{
+    ggsave(
+    file, device = "pdf", useDingbats = FALSE, bg = "white", onefile = TRUE,
+    plot = scDRgene({prefix}conf, {prefix}meta, input${prefix}_gevge_drX, input${prefix}_gevge_drY, input${prefix}_gevge_inp1, input${prefix}_gevge_sub1, input${prefix}_gevge_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_gevge_siz, input${prefix}_gevge_col1, input${prefix}_gevge_ord1, input${prefix}_gevge_fsz, input${prefix}_gevge_asp, input${prefix}_gevge_txt)
+    )
+}})
+
+output${prefix}_gevge_oup1.svg <- downloadHandler(
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_gevge_drX, "_", input${prefix}_gevge_drY, "_", input${prefix}_gevge_inp1, ".svg")) }},
+  content = function(file) {{
+    ggsave(
+    file, device = "svg", bg = "white",
+    plot = scDRgene({prefix}conf, {prefix}meta, input${prefix}_gevge_drX, input${prefix}_gevge_drY, input${prefix}_gevge_inp1, input${prefix}_gevge_sub1, input${prefix}_gevge_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_gevge_siz, input${prefix}_gevge_col1, input${prefix}_gevge_ord1, input${prefix}_gevge_fsz, input${prefix}_gevge_asp, input${prefix}_gevge_txt)
     )
 }})
 
@@ -1242,11 +1277,20 @@ output${prefix}_gevge_oup2.ui <- renderUI({{
   show_progress(imageOutput("{prefix}_gevge_oup2", height = pList[input${prefix}_gevge_psz]))
 }})
 
-output${prefix}_gevge_oup2.pdf <- downloadHandler(
-  filename = function() {{ paste0("{prefix}", input${prefix}_gevge_drX, "_", input${prefix}_gevge_drY, "_", input${prefix}_gevge_inp2,".pdf") }},
+output${prefix}_gevge_oup2.png <- downloadHandler(
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_gevge_drX, "_", input${prefix}_gevge_drY, "_", input${prefix}_gevge_inp2,".png")) }},
   content = function(file) {{
     ggsave(
-    file, device = "pdf", useDingbats = FALSE, bg = "white",
+    file, device = "png", bg = "white", dpi = input${prefix}_gevge_oup2.res,
+    plot = scDRgene({prefix}conf, {prefix}meta, input${prefix}_gevge_drX, input${prefix}_gevge_drY, input${prefix}_gevge_inp2, input${prefix}_gevge_sub1, input${prefix}_gevge_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_gevge_siz, input${prefix}_gevge_col2, input${prefix}_gevge_ord2, input${prefix}_gevge_fsz, input${prefix}_gevge_asp, input${prefix}_gevge_txt)
+    )
+}}) 
+
+output${prefix}_gevge_oup2.pdf <- downloadHandler(
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_gevge_drX, "_", input${prefix}_gevge_drY, "_", input${prefix}_gevge_inp2,".pdf")) }},
+  content = function(file) {{
+    ggsave(
+    file, device = "pdf", useDingbats = FALSE, bg = "white", onefile = TRUE,
     plot = scDRgene({prefix}conf, {prefix}meta, input${prefix}_gevge_drX, input${prefix}_gevge_drY, input${prefix}_gevge_inp2, 
                     input${prefix}_gevge_sub1, input${prefix}_gevge_sub2,
                     "{prefix}gexpr.h5", {prefix}gene,
@@ -1255,12 +1299,16 @@ output${prefix}_gevge_oup2.pdf <- downloadHandler(
     )
 }})
 
-output${prefix}_gevge_oup2.png <- downloadHandler(
-  filename = function() {{ paste0("{prefix}", input${prefix}_gevge_drX, "_", input${prefix}_gevge_drY, "_", input${prefix}_gevge_inp2,".png") }},
+output${prefix}_gevge_oup2.svg <- downloadHandler(
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_gevge_drX, "_", input${prefix}_gevge_drY, "_", input${prefix}_gevge_inp2,".svg")) }},
   content = function(file) {{
     ggsave(
-    file, device = "png", bg = "white", dpi = input${prefix}_gevge_oup2.res,
-    plot = scDRgene({prefix}conf, {prefix}meta, input${prefix}_gevge_drX, input${prefix}_gevge_drY, input${prefix}_gevge_inp2, input${prefix}_gevge_sub1, input${prefix}_gevge_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_gevge_siz, input${prefix}_gevge_col2, input${prefix}_gevge_ord2, input${prefix}_gevge_fsz, input${prefix}_gevge_asp, input${prefix}_gevge_txt)
+    file, device = "svg", bg = "white",
+    plot = scDRgene({prefix}conf, {prefix}meta, input${prefix}_gevge_drX, input${prefix}_gevge_drY, input${prefix}_gevge_inp2, 
+                    input${prefix}_gevge_sub1, input${prefix}_gevge_sub2,
+                    "{prefix}gexpr.h5", {prefix}gene,
+                    input${prefix}_gevge_siz, input${prefix}_gevge_col2, input${prefix}_gevge_ord2,
+                    input${prefix}_gevge_fsz, input${prefix}_gevge_asp, input${prefix}_gevge_txt)
     )
 }}) # End of tab gevge
 
@@ -1295,20 +1343,29 @@ output${prefix}_gec_oup1.ui <- renderUI({{
   show_progress(imageOutput("{prefix}_gec_oup1", height = pList2[input${prefix}_gec_psz]))
 }})
 
+output${prefix}_gec_oup1.png <- downloadHandler(
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_gec_drX, "_", input${prefix}_gec_drY, "_", input${prefix}_gec_inp1, "_", input${prefix}_gec_inp2, ".png")) }},
+  content = function(file) {{ ggsave(
+    file, device = "png", bg = "white", dpi = input${prefix}_gec_oup1.res,
+    plot = scDRcoexFull({prefix}conf, {prefix}meta, input${prefix}_gec_drX, input${prefix}_gec_drY, input${prefix}_gec_inp1, input${prefix}_gec_inp2, input${prefix}_gec_sub1, input${prefix}_gec_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_gec_siz, input${prefix}_gec_col1, input${prefix}_gec_ord1, input${prefix}_gec_fsz, input${prefix}_gec_asp, input${prefix}_gec_txt) )
+}})
+
 output${prefix}_gec_oup1.pdf <- downloadHandler(
-  filename = function() {{ paste0("{prefix}", input${prefix}_gec_drX, "_", input${prefix}_gec_drY, "_", input${prefix}_gec_inp1, "_", input${prefix}_gec_inp2, ".pdf") }},
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_gec_drX, "_", input${prefix}_gec_drY, "_", input${prefix}_gec_inp1, "_", input${prefix}_gec_inp2, ".pdf")) }},
   content = function(file) {{
     ggsave(
-    file, device = "pdf", useDingbats = FALSE, bg = "white",
+    file, device = "pdf", useDingbats = FALSE, bg = "white", onefile = TRUE,
     plot = scDRcoexFull({prefix}conf, {prefix}meta, input${prefix}_gec_drX, input${prefix}_gec_drY, input${prefix}_gec_inp1, input${prefix}_gec_inp2, input${prefix}_gec_sub1, input${prefix}_gec_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_gec_siz, input${prefix}_gec_col1, input${prefix}_gec_ord1, input${prefix}_gec_fsz, input${prefix}_gec_asp, input${prefix}_gec_txt)
     )
 }})
 
-output${prefix}_gec_oup1.png <- downloadHandler(
-  filename = function() {{ paste0("{prefix}", input${prefix}_gec_drX, "_", input${prefix}_gec_drY, "_", input${prefix}_gec_inp1, "_", input${prefix}_gec_inp2, ".png") }},
-  content = function(file) {{ ggsave(
-    file, device = "png", bg = "white", dpi = input${prefix}_gec_oup1.res,
-    plot = scDRcoexFull({prefix}conf, {prefix}meta, input${prefix}_gec_drX, input${prefix}_gec_drY, input${prefix}_gec_inp1, input${prefix}_gec_inp2, input${prefix}_gec_sub1, input${prefix}_gec_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_gec_siz, input${prefix}_gec_col1, input${prefix}_gec_ord1, input${prefix}_gec_fsz, input${prefix}_gec_asp, input${prefix}_gec_txt) )
+output${prefix}_gec_oup1.svg <- downloadHandler(
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_gec_drX, "_", input${prefix}_gec_drY, "_", input${prefix}_gec_inp1, "_", input${prefix}_gec_inp2, ".svg")) }},
+  content = function(file) {{
+    ggsave(
+    file, device = "svg", bg = "white",
+    plot = scDRcoexFull({prefix}conf, {prefix}meta, input${prefix}_gec_drX, input${prefix}_gec_drY, input${prefix}_gec_inp1, input${prefix}_gec_inp2, input${prefix}_gec_sub1, input${prefix}_gec_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_gec_siz, input${prefix}_gec_col1, input${prefix}_gec_ord1, input${prefix}_gec_fsz, input${prefix}_gec_asp, input${prefix}_gec_txt)
+    )
 }})
 
 output${prefix}_gec_.dt <- renderDataTable({{
@@ -1348,22 +1405,32 @@ output${prefix}_vio_oup.ui <- renderUI({{
   show_progress(imageOutput("{prefix}_vio_oup", height = pList2[input${prefix}_vio_psz]))
 }})
 
-output${prefix}_vio_oup.pdf <- downloadHandler(
-  filename = function() {{ paste0("{prefix}", input${prefix}_vio_typ, "_", input${prefix}_vio_inp1, "_", input${prefix}_vio_inp2, ".pdf") }},
-  content = function(file) {{
-    gh5 <- ifelse(input${prefix}_vio_datatype == "normalised","{prefix}gexpr.h5","{prefix}gexpr2.h5")
-    ggsave(
-    file, device = "pdf", useDingbats = FALSE, bg = "white",
-    plot = scVioBox({prefix}conf, {prefix}meta, input${prefix}_vio_inp1, input${prefix}_vio_inp2, input${prefix}_vio_sub1, input${prefix}_vio_sub2, gh5, {prefix}gene, input${prefix}_vio_typ, input${prefix}_vio_pts, input${prefix}_vio_siz, input${prefix}_vio_fsz, input${prefix}_vio_barsz)
-    )
-}})
-
 output${prefix}_vio_oup.png <- downloadHandler(
-  filename = function() {{ paste0("{prefix}", input${prefix}_vio_typ, "_", input${prefix}_vio_inp1, "_", input${prefix}_vio_inp2,".png") }},
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_vio_typ, "_", input${prefix}_vio_datatype, "_", input${prefix}_vio_inp1, "_", input${prefix}_vio_inp2,".png")) }},
   content = function(file) {{
     gh5 <- ifelse(input${prefix}_vio_datatype == "normalised","{prefix}gexpr.h5","{prefix}gexpr2.h5")
     ggsave(
     file, device = "png", bg = "white", dpi = input${prefix}_vio_oup.res,
+    plot = scVioBox({prefix}conf, {prefix}meta, input${prefix}_vio_inp1, input${prefix}_vio_inp2, input${prefix}_vio_sub1, input${prefix}_vio_sub2, gh5, {prefix}gene, input${prefix}_vio_typ, input${prefix}_vio_pts, input${prefix}_vio_siz, input${prefix}_vio_fsz, input${prefix}_vio_barsz)
+    )
+}}) 
+
+output${prefix}_vio_oup.pdf <- downloadHandler(
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_vio_typ, "_", input${prefix}_vio_datatype, "_", input${prefix}_vio_inp1, "_", input${prefix}_vio_inp2, ".pdf")) }},
+  content = function(file) {{
+    gh5 <- ifelse(input${prefix}_vio_datatype == "normalised","{prefix}gexpr.h5","{prefix}gexpr2.h5")
+    ggsave(
+    file, device = "pdf", useDingbats = FALSE, bg = "white", onefile = TRUE,
+    plot = scVioBox({prefix}conf, {prefix}meta, input${prefix}_vio_inp1, input${prefix}_vio_inp2, input${prefix}_vio_sub1, input${prefix}_vio_sub2, gh5, {prefix}gene, input${prefix}_vio_typ, input${prefix}_vio_pts, input${prefix}_vio_siz, input${prefix}_vio_fsz, input${prefix}_vio_barsz)
+    )
+}})
+
+output${prefix}_vio_oup.svg <- downloadHandler(
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_vio_typ, "_", input${prefix}_vio_datatype, "_", input${prefix}_vio_inp1, "_", input${prefix}_vio_inp2, ".svg")) }},
+  content = function(file) {{
+    gh5 <- ifelse(input${prefix}_vio_datatype == "normalised","{prefix}gexpr.h5","{prefix}gexpr2.h5")
+    ggsave(
+    file, device = "svg", bg = "white",
     plot = scVioBox({prefix}conf, {prefix}meta, input${prefix}_vio_inp1, input${prefix}_vio_inp2, input${prefix}_vio_sub1, input${prefix}_vio_sub2, gh5, {prefix}gene, input${prefix}_vio_typ, input${prefix}_vio_pts, input${prefix}_vio_siz, input${prefix}_vio_fsz, input${prefix}_vio_barsz)
     )
 }}) # End of tab vio
@@ -1399,20 +1466,29 @@ output${prefix}_pro_oup.ui <- renderUI({{
   show_progress(imageOutput("{prefix}_pro_oup", height = pList2[input${prefix}_pro_psz]))
 }})
 
-output${prefix}_pro_oup.pdf <- downloadHandler(
-  filename = function() {{ paste0("{prefix}", input${prefix}_pro_typ, "_", input${prefix}_pro_inp1, "_", input${prefix}_pro_inp2, ".pdf") }},
-  content = function(file) {{
-    ggsave(
-    file, device = "pdf", useDingbats = FALSE, bg = "white",
-    plot = scProp({prefix}conf, {prefix}meta, input${prefix}_pro_inp1, input${prefix}_pro_inp2, input${prefix}_pro_sub1, input${prefix}_pro_sub2, input${prefix}_pro_typ, input${prefix}_pro_flp, input${prefix}_pro_fsz)
-    )
-  }})
-
 output${prefix}_pro_oup.png <- downloadHandler(
-  filename = function() {{ paste0("{prefix}", input${prefix}_pro_typ, "_", input${prefix}_pro_inp1, "_", input${prefix}_pro_inp2, ".png") }},
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_pro_typ, "_", input${prefix}_pro_inp1, "_", input${prefix}_pro_inp2, ".png")) }},
   content = function(file) {{
     ggsave(
     file, device = "png", bg = "white", dpi = input${prefix}_pro_oup.res,
+    plot = scProp({prefix}conf, {prefix}meta, input${prefix}_pro_inp1, input${prefix}_pro_inp2, input${prefix}_pro_sub1, input${prefix}_pro_sub2, input${prefix}_pro_typ, input${prefix}_pro_flp, input${prefix}_pro_fsz)
+    )
+  }}) 
+  
+output${prefix}_pro_oup.pdf <- downloadHandler(
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_pro_typ, "_", input${prefix}_pro_inp1, "_", input${prefix}_pro_inp2, ".pdf")) }},
+  content = function(file) {{
+    ggsave(
+    file, device = "pdf", useDingbats = FALSE, bg = "white", onefile = TRUE,
+    plot = scProp({prefix}conf, {prefix}meta, input${prefix}_pro_inp1, input${prefix}_pro_inp2, input${prefix}_pro_sub1, input${prefix}_pro_sub2, input${prefix}_pro_typ, input${prefix}_pro_flp, input${prefix}_pro_fsz)
+    )
+  }})
+  
+output${prefix}_pro_oup.svg <- downloadHandler(
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_pro_typ, "_", input${prefix}_pro_inp1, "_", input${prefix}_pro_inp2, ".svg")) }},
+  content = function(file) {{
+    ggsave(
+    file, device = "svg", bg = "white",
     plot = scProp({prefix}conf, {prefix}meta, input${prefix}_pro_inp1, input${prefix}_pro_inp2, input${prefix}_pro_sub1, input${prefix}_pro_sub2, input${prefix}_pro_typ, input${prefix}_pro_flp, input${prefix}_pro_fsz)
     )
   }}) # End of tab pro
@@ -1443,11 +1519,6 @@ output${prefix}_hea_oupTxt <- renderUI({{
   geneList = scGeneList(input${prefix}_hea_inp, {prefix}gene)
   if(nrow(geneList) > 50){{
     HTML("More than 50 input genes! Please reduce the gene list!")
-  }} else {{
-    if(nrow(geneList[present == FALSE]) > 0){{
-      oup = paste0(nrow(geneList[present == FALSE]), " genes not found (", paste0(geneList[present == FALSE]$gene, collapse = ", "), ")")
-      HTML(paste0("<span class=\'text-danger\'>",oup,"</span>"))
-    }}
   }}
 }})
 
@@ -1459,21 +1530,30 @@ output${prefix}_hea_oup.ui <- renderUI({{
   show_progress(imageOutput("{prefix}_hea_oup", height = pList3[input${prefix}_hea_psz]))
 }})
 
-output${prefix}_hea_oup.pdf <- downloadHandler(
-  filename = function() {{ paste0("{prefix}",input${prefix}_hea_plt,"_",input${prefix}_hea_grp,".pdf") }},
+output${prefix}_hea_oup.png <- downloadHandler(
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_hea_plt,"_",input${prefix}_hea_grp,".png")) }},
   content = function(file) {{
     ggsave(
-    file, device = "pdf", useDingbats = FALSE, bg = "white",
-    plot = scBubbHeat({prefix}conf, {prefix}meta, input${prefix}_hea_inp, input${prefix}_hea_grp, input${prefix}_hea_plt, input${prefix}_hea_sub1, input${prefix}_hea_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_hea_scl, input${prefix}_hea_row, input${prefix}_hea_col, input${prefix}_hea_cols, input${prefix}_hea_fsz, save = TRUE)
+    file, device = "png", bg = "white", height = input${prefix}_hea_oup.height, width = input${prefix}_hea_oup.width, units = "cm", dpi = input${prefix}_hea_oup.res, plot = scBubbHeat({prefix}conf, {prefix}meta, input${prefix}_hea_inp, input${prefix}_hea_grp, input${prefix}_hea_plt, input${prefix}_hea_sub1, input${prefix}_hea_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_hea_scl, input${prefix}_hea_row, input${prefix}_hea_col, input${prefix}_hea_cols, input${prefix}_hea_fsz)
     )
 }})
 
-output${prefix}_hea_oup.png <- downloadHandler(
-  filename = function() {{ paste0("{prefix}",input${prefix}_hea_plt,"_",input${prefix}_hea_grp,".png") }},
+output${prefix}_hea_oup.pdf <- downloadHandler(
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_hea_plt,"_",input${prefix}_hea_grp,".pdf")) }},
+  content = function(file) {{
+    pdf(file, useDingbats = FALSE, bg = "white", height = input${prefix}_hea_oup.height/2.54, width = input${prefix}_hea_oup.width/2.54, onefile = TRUE)
+    showtext::showtext_begin()
+    print(scBubbHeat({prefix}conf, {prefix}meta, input${prefix}_hea_inp, input${prefix}_hea_grp, input${prefix}_hea_plt, input${prefix}_hea_sub1, input${prefix}_hea_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_hea_scl, input${prefix}_hea_row, input${prefix}_hea_col, input${prefix}_hea_cols, input${prefix}_hea_fsz))
+    showtext::showtext_end()
+    dev.off()
+}})
+
+output${prefix}_hea_oup.svg <- downloadHandler(
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_hea_plt,"_",input${prefix}_hea_grp,".svg")) }},
   content = function(file) {{
     ggsave(
-    file, device = "png", bg = "white", dpi = input${prefix}_hea_oup.res,
-    plot = scBubbHeat({prefix}conf, {prefix}meta, input${prefix}_hea_inp, input${prefix}_hea_grp, input${prefix}_hea_plt, input${prefix}_hea_sub1, input${prefix}_hea_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_hea_scl, input${prefix}_hea_row, input${prefix}_hea_col, input${prefix}_hea_cols, input${prefix}_hea_fsz, save = TRUE)
+    file, device = "svg", bg = "white", height = input${prefix}_hea_oup.height, width = input${prefix}_hea_oup.width, units = "cm", 
+    plot = scBubbHeat({prefix}conf, {prefix}meta, input${prefix}_hea_inp, input${prefix}_hea_grp, input${prefix}_hea_plt, input${prefix}_hea_sub1, input${prefix}_hea_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_hea_scl, input${prefix}_hea_row, input${prefix}_hea_col, input${prefix}_hea_cols, input${prefix}_hea_fsz)
     )
 }}) # End of tab hea      
        
@@ -1509,20 +1589,30 @@ output${prefix}_gem_oup1.ui <- renderUI({{
   show_progress(imageOutput("{prefix}_gem_oup1", height = pList[input${prefix}_gem_psz]))
 }})
 
-output${prefix}_gem_oup1.pdf <- downloadHandler(
-  filename = function() {{ paste0("{prefix}", input${prefix}_gem_drX, "_", input${prefix}_gem_drY, "_expression.pdf") },
-  content = function(file) {{ ggsave(
-    file, device = "pdf", useDingbats = FALSE, height = input${prefix}_gem_oup1.height, width = input${prefix}_gem_oup1.width, units = "cm", bg = "white",
-    plot = scFeature({prefix}conf, {prefix}meta, input${prefix}_gem_drX, input${prefix}_gem_drY, input${prefix}_gem_inp, input${prefix}_gem_sub1, input${prefix}_gem_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_gem_siz, input${prefix}_gem_col, input${prefix}_gem_ord, input${prefix}_gem_fsz, input${prefix}_gem_asp, input${prefix}_gem_txt, input${prefix}_gem_ncol))
-}})
-
 output${prefix}_gem_oup1.png <- downloadHandler(
-  filename = function() {{ paste0("{prefix}", input${prefix}_gem_drX, "_", input${prefix}_gem_drY, "_expression.png") }},
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_gem_drX, "_", input${prefix}_gem_drY, "_expression.png")) }},
   content = function(file) {{
     ggsave(
       file, device = "png", height = input${prefix}_gem_oup1.height, width = input${prefix}_gem_oup1.width, dpi = input${prefix}_gem_oup1.res, units = "cm", bg = "white",
       plot = scFeature({prefix}conf, {prefix}meta, input${prefix}_gem_drX, input${prefix}_gem_drY, input${prefix}_gem_inp, input${prefix}_gem_sub1, input${prefix}_gem_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_gem_siz, input${prefix}_gem_col, input${prefix}_gem_ord, input${prefix}_gem_fsz, input${prefix}_gem_asp, input${prefix}_gem_txt, input${prefix}_gem_ncol)
     )
+}}) 
+
+output${prefix}_gem_oup1.pdf <- downloadHandler(
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_gem_drX, "_", input${prefix}_gem_drY, "_expression.pdf")) },
+  content = function(file) {{
+  pdf(file, useDingbats = FALSE, height = input${prefix}_gem_oup1.height/2.54, width = input${prefix}_gem_oup1.width/2.54, bg = "white", onefile = TRUE)
+  showtext::showtext_begin()
+  print(scFeature({prefix}conf, {prefix}meta, input${prefix}_gem_drX, input${prefix}_gem_drY, input${prefix}_gem_inp, input${prefix}_gem_sub1, input${prefix}_gem_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_gem_siz, input${prefix}_gem_col, input${prefix}_gem_ord, input${prefix}_gem_fsz, input${prefix}_gem_asp, input${prefix}_gem_txt, input${prefix}_gem_ncol))
+  showtext::showtext_end()
+  dev.off()
+}})
+
+output${prefix}_gem_oup1.svg <- downloadHandler(
+  filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_gem_drX, "_", input${prefix}_gem_drY, "_expression.svg")) },
+  content = function(file) {{ ggsave(
+    file, device = "svg", height = input${prefix}_gem_oup1.height, width = input${prefix}_gem_oup1.width, units = "cm", bg = "white",
+    plot = scFeature({prefix}conf, {prefix}meta, input${prefix}_gem_drX, input${prefix}_gem_drY, input${prefix}_gem_inp, input${prefix}_gem_sub1, input${prefix}_gem_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_gem_siz, input${prefix}_gem_col, input${prefix}_gem_ord, input${prefix}_gem_fsz, input${prefix}_gem_asp, input${prefix}_gem_txt, input${prefix}_gem_ncol))
 }}) # End of tab gem
 
 ')
@@ -1546,11 +1636,12 @@ output${prefix}_mar_table <- renderDataTable({{
 #' Write code for main block of server.R
 #' @param prefix file prefix
 #' @param subst Conditional
+#' @param font Character denoting font for plots
 #' @param tabs Vector of tab names to include
 #' @rdname wr_sv_main
 #' @export wr_sv_main
 #'
-wr_sv_main <- function(prefix, subst = "", tabs = c("civge", "civci", "gevge", "gem", "gec", "vio", "pro", "hea")) {
+wr_sv_main <- function(prefix, subst = "", font = NULL, tabs = c("civge", "civci", "gevge", "gem", "gec", "vio", "pro", "hea")) {
   
 glue::glue(
 'optCrt="{{ option_create: function(data,escape) {{return(\'<div class=\\"create\\"><strong>\' + \'</strong></div>\');}} }}"
@@ -1569,6 +1660,12 @@ updateSelectizeInput(session, "{prefix}_gec_inp1", choices = names({prefix}gene)
 updateSelectizeInput(session, "{prefix}_gec_inp2", choices = names({prefix}gene), server = TRUE,
                      selected = {prefix}def$gene2, options = list(
                        maxOptions = 7, create = TRUE, persist = TRUE, render = I(optCrt)))
+updateSelectizeInput(session, "{prefix}_gem_inp", choices = names({prefix}gene), server = TRUE,
+                     selected = {prefix}def$genes[1:9], options = list(
+                     create = TRUE, persist = TRUE, render = I(optCrt)))
+updateSelectizeInput(session, "{prefix}_hea_inp", choices = names({prefix}gene), server = TRUE,
+                     selected = {prefix}def$genes[1:12], options = list(
+                     create = TRUE, persist = TRUE, render = I(optCrt)))
 updateSelectizeInput(session, "{prefix}_vio_inp2", server = TRUE,
                      choices = c({prefix}conf[is.na(fID)]$UI,names({prefix}gene)),
                      selected = {prefix}conf[is.na(fID)]$UI[1], options = list(
@@ -1728,15 +1825,11 @@ tabPanel(
                 ) %>%
                   helper(
                     type = "inline", size = "m", fade = TRUE,
-                    title = "Cell info to colour cells by",
+                    title = "Cell info to colour cells",
                     content = c(
-                      "Select cell info to colour cells",
+                      "- Select cell info to colour cells",
                       "- Categorical covariates have a fixed colour palette",
-                      paste0(
-                        "- Continuous covariates are coloured in a ",
-                        "Blue-Yellow-Red colour scheme, which can be ",
-                        "changed in the plot controls"
-                      )
+                      "- Continuous covariates are coloured in a Blue-Yellow-Red colour scheme, which can be changed in the plot controls"
                     )
                   )
               )
@@ -1777,8 +1870,9 @@ tabPanel(
               div(
                 class = "input-panel",
                 numericInput("{prefix}_civge_oup1.res", "Resolution:", min = 72, max = 600, value = 150, step = 5),
-                downloadButton("{prefix}_civge_oup1.pdf", "Download PDF", class = "btn-sm"),
                 downloadButton("{prefix}_civge_oup1.png", "Download PNG", class = "btn-sm"),
+                downloadButton("{prefix}_civge_oup1.pdf", "Download PDF", class = "btn-sm"),
+                downloadButton("{prefix}_civge_oup1.svg", "Download SVG", class = "btn-sm"),
                 checkboxInput("{prefix}_civge_tog9", "Show cell numbers / statistics")
               )
             )
@@ -1806,14 +1900,11 @@ tabPanel(
                 selectInput("{prefix}_civge_inp2", "Gene name:", choices = NULL) %>%
                   helper(
                     type = "inline", size = "m", fade = TRUE,
-                    title = "Gene expression to colour cells by",
+                    title = "Gene expression to colour cells",
                     content = c(
-                      "Select gene to colour cells by gene expression",
-                      paste0(
-                        "- Gene expression are coloured in a ",
-                        "White-Red colour scheme which can be ",
-                        "changed in the plot controls"
-                      )
+                      "- Select gene to colour cells by gene expression",
+                      "- Type in gene names for unlisted genes",
+                      "- Gene expression are coloured in a White-Red colour scheme which can be changed in the plot controls"
                     )
                   )
               )
@@ -1851,8 +1942,9 @@ tabPanel(
               div(
                 class = "input-panel",
                 numericInput("{prefix}_civge_oup2.res", "Resolution:", min = 72, max = 600, value = 150, step = 5),
+                downloadButton("{prefix}_civge_oup2.png", "Download PNG", class = "btn-sm"),
                 downloadButton("{prefix}_civge_oup2.pdf", "Download PDF", class = "btn-sm"),
-                downloadButton("{prefix}_civge_oup2.png", "Download PNG", class = "btn-sm")
+                downloadButton("{prefix}_civge_oup2.svg", "Download SVG", class = "btn-sm")
               )
             )
           )
@@ -1970,15 +2062,11 @@ tabPanel(
                 ) %>%
                   helper(
                     type = "inline", size = "m", fade = TRUE,
-                    title = "Cell info to colour cells by",
+                    title = "Cell info to colour cells",
                     content = c(
-                      "Select cell info to colour cells",
+                      "- Select cell info to colour cells",
                       "- Categorical covariates have a fixed colour palette",
-                      paste0(
-                        "- Continuous covariates are coloured in a ",
-                        "Blue-Yellow-Red colour scheme, which can be ",
-                        "changed in the plot controls"
-                      )
+                      "- Continuous covariates are coloured in a Blue-Yellow-Red colour scheme, which can be changed in the plot controls"
                     )
                   )
               )
@@ -2016,8 +2104,9 @@ tabPanel(
               div(
                 class = "input-panel",
                 numericInput("{prefix}_civci_oup1.res", "Resolution:", min = 72, max = 600, value = 150, step = 5),
+                downloadButton("{prefix}_civci_oup1.png", "Download PNG", class = "btn-sm"),
                 downloadButton("{prefix}_civci_oup1.pdf", "Download PDF", class = "btn-sm"),
-                downloadButton("{prefix}_civci_oup1.png", "Download PNG", class = "btn-sm")
+                downloadButton("{prefix}_civci_oup1.svg", "Download svg", class = "btn-sm")
               )
             )
           )
@@ -2037,15 +2126,11 @@ tabPanel(
                 ) %>%
                   helper(
                     type = "inline", size = "m", fade = TRUE,
-                    title = "Cell info to colour cells by",
+                    title = "Cell info to colour cells",
                     content = c(
-                      "Select cell info to colour cells",
+                      "- Select cell info to colour cells",
                       "- Categorical covariates have a fixed colour palette",
-                      paste0(
-                        "- Continuous covariates are coloured in a ",
-                        "Blue-Yellow-Red colour scheme, which can be ",
-                        "changed in the plot controls"
-                      )
+                      "- Continuous covariates are coloured in a Blue-Yellow-Red colour scheme, which can be changed in the plot controls"
                     )
                   )
               )
@@ -2081,8 +2166,9 @@ tabPanel(
               div(
                 class = "input-panel",
                 numericInput("{prefix}_civci_oup2.res", "Resolution:", min = 72, max = 600, value = 150, step = 5),
+                downloadButton("{prefix}_civci_oup2.png", "Download PNG", class = "btn-sm"),
                 downloadButton("{prefix}_civci_oup2.pdf", "Download PDF", class = "btn-sm"),
-                downloadButton("{prefix}_civci_oup2.png", "Download PNG", class = "btn-sm")
+                downloadButton("{prefix}_civci_oup2.svg", "Download SVG", class = "btn-sm")
               )
             )
           )
@@ -2195,14 +2281,11 @@ tabPanel(
                 selectInput("{prefix}_gevge_inp1", "Gene name:", choices = NULL) %>%
                   helper(
                     type = "inline", size = "m", fade = TRUE,
-                    title = "Gene expression to colour cells by",
+                    title = "Gene expression to colour cells",
                     content = c(
-                      "Select gene to colour cells by gene expression",
-                      paste0(
-                        "- Gene expression are coloured in a ",
-                        "White-Red colour scheme which can be ",
-                        "changed in the plot controls"
-                      )
+                      "- Select gene to colour cells by gene expression",
+                      "- Type in gene names for unlisted genes",
+                      "- Gene expression are coloured in a White-Red colour scheme which can be changed in the plot controls"
                     )
                   )
               )
@@ -2242,8 +2325,9 @@ tabPanel(
               div(
                 class = "input-panel",
                 numericInput("{prefix}_gevge_oup1.res", "Resolution:", min = 72, max = 600, value = 150, step = 5),
+                downloadButton("{prefix}_gevge_oup1.png", "Download PNG", class = "btn-sm"),
                 downloadButton("{prefix}_gevge_oup1.pdf", "Download PDF", class = "btn-sm"),
-                downloadButton("{prefix}_gevge_oup1.png", "Download PNG", class = "btn-sm")
+                downloadButton("{prefix}_gevge_oup1.svg", "Download SVG", class = "btn-sm")
               )
             )
           )
@@ -2260,14 +2344,11 @@ tabPanel(
                 selectInput("{prefix}_gevge_inp2", "Gene name:", choices = NULL) %>%
                   helper(
                     type = "inline", size = "m", fade = TRUE,
-                    title = "Gene expression to colour cells by",
+                    title = "Gene expression to colour cells",
                     content = c(
-                      "Select gene to colour cells by gene expression",
-                      paste0(
-                        "- Gene expression are coloured in a ",
-                        "White-Red colour scheme which can be ",
-                        "changed in the plot controls"
-                      )
+                      "- Select gene to colour cells by gene expression",
+                      "- Type in gene names for unlisted genes",
+                      "- Gene expression are coloured in a White-Red colour scheme which can be changed in the plot controls"
                     )
                   )
               )
@@ -2305,8 +2386,9 @@ tabPanel(
               div(
                 class = "input-panel",
                   numericInput("{prefix}_gevge_oup2.res", "Resolution:", min = 72, max = 600, value = 150, step = 5),
+                  downloadButton("{prefix}_gevge_oup2.png", "Download PNG", class = "btn-sm"),
                   downloadButton("{prefix}_gevge_oup2.pdf", "Download PDF", class = "btn-sm"),
-                  downloadButton("{prefix}_gevge_oup2.png", "Download PNG", class = "btn-sm")
+                  downloadButton("{prefix}_gevge_oup2.svg", "Download SVG", class = "btn-sm")
               )
             )
           )
@@ -2360,27 +2442,21 @@ tabPanel(
                    selectInput("{prefix}_gec_inp1", "Gene 1:", choices = NULL) %>%
                      helper(
                        type = "inline", size = "m", fade = TRUE,
-                       title = "Gene expression to colour cells by",
+                       title = "Gene expression to colour cells",
                        content = c(
-                         "Select gene to colour cells by gene expression",
-                         paste0(
-                           "- Gene expression are coloured in a ",
-                           "White-Red colour scheme which can be ",
-                           "changed in the plot controls"
-                         )
+                         "- Select gene to colour cells by gene expression",
+                         "- Type in gene names for unlisted genes",
+                         "- Gene expression are coloured in a White-Red colour scheme which can be changed in the plot controls"
                        )
                      ),
                    selectInput("{prefix}_gec_inp2", "Gene 2:", choices = NULL) %>%
                      helper(
                        type = "inline", size = "m", fade = TRUE,
-                       title = "Gene expression to colour cells by",
+                       title = "Gene expression to colour cells",
                        content = c(
-                         "Select gene to colour cells by gene expression",
-                         paste0(
-                           "- Gene expression are coloured in a ",
-                           "White-Blue colour scheme which can be ",
-                           "changed in the plot controls"
-                         )
+                         "- Select gene to colour cells by gene expression",
+                         "- Type in gene names for unlisted genes",
+                         "- Gene expression are coloured in a White-Blue colour scheme which can be changed in the plot controls"
                        )
                      ),
                    {subst}checkboxInput("{prefix}_gec_togL", "Subset cells"),
@@ -2427,8 +2503,9 @@ tabPanel(
                  ),
                  div(class="input-panel input-panel-section",
                      numericInput("{prefix}_gec_oup1.res", "Resolution:", min = 72, max = 600, value = 150, step = 5),
+                     downloadButton("{prefix}_gec_oup1.png", "Download PNG", class = "btn-sm"),
                      downloadButton("{prefix}_gec_oup1.pdf", "Download PDF", class = "btn-sm"),
-                     downloadButton("{prefix}_gec_oup1.png", "Download PNG", class = "btn-sm")
+                     downloadButton("{prefix}_gec_oup1.svg", "Download SVG", class = "btn-sm"),
                  ),
                  div(class="input-panel-section",
                      h4("Cell numbers"),
@@ -2484,9 +2561,9 @@ tabPanel(
             ) %>%
               helper(
                 type = "inline", size = "m", fade = TRUE,
-                title = "Cell info to group cells by",
+                title = "Cell info to group cells",
                 content = c(
-                  "Select categorical cell info to group cells by",
+                  "- Select categorical cell info to group cells by",
                   "- Single cells are grouped by this categorical covariate",
                   "- Plotted as the X-axis of the violin plot / box plot"
                 )
@@ -2496,9 +2573,10 @@ tabPanel(
                 type = "inline", size = "m", fade = TRUE,
                 title = "Cell Info / Gene to plot",
                 content = c(
-                  "Select cell info / gene to plot on Y-axis",
+                  "- Select cell info / gene to plot on Y-axis",
                   "- Can be continuous cell info (e.g. nUMIs / scores)",
-                  "- Can also be gene expression"
+                  "- Can also be gene expression",
+                  "- Type in gene names for unlisted genes"
                 )
               ),
             radioButtons("{prefix}_vio_typ", "Plot type:",
@@ -2541,8 +2619,9 @@ tabPanel(
           div(
             class = "input-panel",
             numericInput("{prefix}_vio_oup.res", "Resolution:", min = 72, max = 600, value = 150, step = 5),
+            downloadButton("{prefix}_vio_oup.png", "Download PNG", class = "btn-sm"),
             downloadButton("{prefix}_vio_oup.pdf", "Download PDF", class = "btn-sm"),
-            downloadButton("{prefix}_vio_oup.png", "Download PNG", class = "btn-sm")
+            downloadButton("{prefix}_vio_oup.svg", "Download SVG", class = "btn-sm")
           )
         ), # row 2 col 1
         # row 2 col 2
@@ -2591,9 +2670,9 @@ tabPanel(
             ) %>%
               helper(
                 type = "inline", size = "m", fade = TRUE,
-                title = "Cell info to plot cells by",
+                title = "Cell info to group cells",
                 content = c(
-                  "Select categorical cell info to plot cells by",
+                  "- Select categorical cell info to group cells",
                   "- Plotted as the X-axis of the proportion plot"
                 )
               ),
@@ -2603,9 +2682,9 @@ tabPanel(
             ) %>%
               helper(
                 type = "inline", size = "m", fade = TRUE,
-                title = "Cell info to group / colour cells by",
+                title = "Cell info to group / colour cells",
                 content = c(
-                  "Select categorical cell info to group / colour cells by",
+                  "- Select categorical cell info to group / colour cells",
                   "- Proportion / cell numbers are shown in different colours"
                 )
               ),
@@ -2641,8 +2720,9 @@ tabPanel(
           div(
             class = "input-panel",
             numericInput("{prefix}_pro_oup.res", "Resolution:", min = 72, max = 600, value = 150, step = 5),
+            downloadButton("{prefix}_pro_oup.png", "Download PNG", class = "btn-sm"),
             downloadButton("{prefix}_pro_oup.pdf", "Download PDF", class = "btn-sm"),
-            downloadButton("{prefix}_pro_oup.png", "Download PNG", class = "btn-sm")
+            downloadButton("{prefix}_pro_oup.svg", "Download SVG", class = "btn-sm")
           )
         ), # row 2 col 1
         # row 2 col 2
@@ -2681,20 +2761,16 @@ tabPanel(
       fluidRow(
         class = "tab-section",
         column(
-          3,
+          4,
           div(
             class = "input-panel",
-            textAreaInput("{prefix}_hea_inp", "Gene names",
-              height = "100px",
-              value = paste0({prefix}def$genes, collapse = ", ")
-            ) %>%
+            selectInput("{prefix}_hea_inp", "Genes:", choices = NULL, multiple = TRUE) %>%
               helper(
                 type = "inline", size = "m", fade = TRUE,
                 title = "List of genes to plot on bubbleplot / heatmap",
                 content = c(
-                  "Input genes to plot",
-                  "- Maximum 50 genes (due to ploting space limitations)",
-                  "- Genes should be separated by comma, semicolon or newline"
+                  "- Input genes to plot",
+                  "- Type in gene names for unlisted genes"
                 )
               ),
             selectInput("{prefix}_hea_grp", "Group by:",
@@ -2703,9 +2779,9 @@ tabPanel(
             ) %>%
               helper(
                 type = "inline", size = "m", fade = TRUE,
-                title = "Cell info to group cells by",
+                title = "Cell info to group cells",
                 content = c(
-                  "Select categorical cell info to group cells by",
+                  "- Select categorical cell info to group cells",
                   "- Single cells are grouped by this categorical covariate",
                   "- Plotted as the X-axis of the bubbleplot / heatmap"
                 )
@@ -2750,14 +2826,25 @@ tabPanel(
           ),
           div(
             class = "input-panel",
-            numericInput("{prefix}_hea_oup.res", "Resolution:", min = 72, max = 600, value = 150, step = 5),
+            fluidRow(
+              column(4,
+                     numericInput("{prefix}_hea_oup.height", "Height:", min = 5, max = 100, value = 18, step = 2)
+              ),
+              column(4,
+                     numericInput("{prefix}_hea_oup.width", "Width:", min = 5, max = 100, value = 18, step = 2)
+              ),
+              column(4,
+                     numericInput("{prefix}_hea_oup.res", "Res:", min = 72, max = 600, value = 150, step = 5)
+              )
+            ),
+            downloadButton("{prefix}_hea_oup.png", "Download PNG", class = "btn-sm"),
             downloadButton("{prefix}_hea_oup.pdf", "Download PDF", class = "btn-sm"),
-            downloadButton("{prefix}_hea_oup.png", "Download PNG", class = "btn-sm")
+            downloadButton("{prefix}_hea_oup.svg", "Download SVG", class = "btn-sm")
           )
         ), # row 2 col 1
         # row 2 col 2
         column(
-          9, h4(htmlOutput("{prefix}_hea_oupTxt")),
+          8, h4(htmlOutput("{prefix}_hea_oupTxt")),
           uiOutput("{prefix}_hea_oup.ui")
         ) # row 2 col 2
       ), # row 2
@@ -2797,17 +2884,13 @@ tabPanel(
           12,
           div(
             class = "input-panel input-panel-section",
-            textAreaInput("{prefix}_gem_inp", "Gene names:",
-                          height = "100px",
-                          value = paste0({prefix}def$genes, collapse = ", ")
-            ) %>%
+            selectInput("{prefix}_gem_inp", "Genes:", choices = NULL, multiple = TRUE) %>%
               helper(
                 type = "inline", size = "m", fade = TRUE,
                 title = "List of genes to plot on bubbleplot / heatmap",
                 content = c(
-                  "Input genes to plot",
-                  "- Maximum 16 genes (due to ploting space limitations)",
-                  "- Genes should be separated by comma, semicolon or newline"
+                  "- Input genes to plot",
+                  "- Type in gene names for unlisted genes"
                 )
               ),
             selectInput("{prefix}_gem_drX", "X-axis:",
@@ -2875,8 +2958,9 @@ tabPanel(
               numericInput("{prefix}_gem_oup1.res", "Res:", min = 72, max = 600, value = 150, step = 5)
             )
             ),
+            downloadButton("{prefix}_gem_oup1.png", "Download PNG", class = "btn-sm"),
             downloadButton("{prefix}_gem_oup1.pdf", "Download PDF", class = "btn-sm"),
-            downloadButton("{prefix}_gem_oup1.png", "Download PNG", class = "btn-sm")
+            downloadButton("{prefix}_gem_oup1.svg", "Download SVG", class = "btn-sm")
           )
         )
                )

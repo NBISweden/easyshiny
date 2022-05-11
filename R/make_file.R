@@ -71,11 +71,13 @@ make_file <- function(
   # check if obj is seurat
   # check if assay1,slot1 has same dims as assay2,slot2
   if(!is.na(assay2) && !is.na(slot2)) {
+    
     if(class(obj)[1] != "Seurat") stop("Only Seurat v3 objects are supported when using assay2 and slot2.")
+    if((assay1 == assay2) && (slot1 == slot2)) stop("assay1 is the same as assay2 and slot1 is the same as slot2. Either remove assay2/slot2 or change assay2/slot2.")
     if(!all.equal(dim(slot(obj@assays[[assay1[1]]], slot1[1])),dim(slot(obj@assays[[assay2[1]]], slot2[1])))) stop("Dimensions of assay1,slot1 do not match assay2,slot2. Both datasets must have the same dimensions.")
     gex2 <- TRUE
   }else{
-    stop("assay1 is the same as assay2 and slot1 is the same as slot2. Either remove assay2/slot2 or change assay2/slot2.")
+    gex2 <- FALSE
   }
   
   # Generate defaults for assay1 / slot1 ----

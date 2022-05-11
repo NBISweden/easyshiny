@@ -5,9 +5,9 @@
 \title{Generate code files required for shiny app (one dataset)}
 \usage{
 make_code(
-  shiny.title,
-  shiny.prefix,
-  shiny.dir,
+  shiny.title = "App",
+  shiny.prefix = "sc1",
+  shiny.dir = "app",
   enableSubset = TRUE,
   defPtSiz = 1.25,
   theme = "flatly",
@@ -36,7 +36,7 @@ smaller size can be used if you have many cells in your dataset}
 
 \item{about}{Should about page be added as a tab?}
 
-\item{font}{Google font for plots}
+\item{font}{Google font for plots. Defaults to "Lato".}
 
 \item{ganalytics}{Google analytics tracking ID (e.g. "UA-123456789-0")}
 }

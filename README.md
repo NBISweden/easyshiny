@@ -7,7 +7,7 @@
 Run the following code to check if the dependency packages required are installed, else install them if required:
 
 ``` r
-reqPkg = c("data.table", "DT", "ggdendro", "ggplot2", "ggrepel", "glue", "gridExtra", "hdf5r", "magrittr", "Matrix", "RColorBrewer", "readr", "remotes", "reticulate", "R.utils", "Seurat", "shiny", "shinyhelper", "showtext", "shinythemes", "shinycssloaders")
+reqPkg = c("data.table", "DT", "ggdendro", "ggplot2", "ggrepel", "glue", "grid", "hdf5r", "magrittr", "Matrix", "patchwork" ,"RColorBrewer", "readr", "remotes", "reticulate", "R.utils", "Seurat", "shiny", "shinyhelper", "showtext", "shinythemes", "shinycssloaders")
 
 newPkg = reqPkg[!(reqPkg %in% installed.packages()[,"Package"])]
 if(length(newPkg)){install.packages(newPkg)}

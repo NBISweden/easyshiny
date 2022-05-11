@@ -10,7 +10,7 @@
 #'
 #' @author John F. Ouyang
 #'
-#' @import data.table grid gridExtra
+#' @import data.table
 #'
 #' @examples
 #' \dontrun{
@@ -32,10 +32,6 @@ show_order <- function(scConf){
   ggOut[nlvl > 0]$fID = "cat."
   ggOut[default == 0]$default = ""
   colnames(ggOut) = c("actual name", "display name", "type", "nlevels", "default")
-  
-  # Plot table
-  grid.newpage()
-  grid.table(ggOut)
 
   return(ggOut)
 }

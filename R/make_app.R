@@ -33,6 +33,7 @@
 #' @param shiny.title title for shiny app
 #' @param shiny.dir specify directory to create the shiny app in. Default is
 #'   to create a new directory named "shinyApp"
+#' @param shiny.prefix specify file prefix 
 #' @param enableSubset specify whether to enable "Toggle to subset cells"
 #'   functionality in the shiny app. Default is to enable this functionality
 #' @param defPtSiz specify default point size for single cells. For example, a
@@ -54,7 +55,7 @@
 #'
 #' @export
 #' 
-make_app <- function(obj, scConf, assay1 = NA, slot1 = c("data", "scale.data", "counts"), assay2 = NA, slot2 = NA, gene.mapping = FALSE, shiny.title = "scRNA-seq shiny app", shiny.dir = "shinyApp/", enableSubset = TRUE, defPtSiz = 1.25, ganalytics = NA, default.gene1 = NA, default.gene2 = NA, default.multigene = NA, default.dimred = NA, tabs = c("civge", "civci", "gevge", "gem", "gec", "vio", "pro", "hea"), theme = "flatly", font = "Lato") {
+make_app <- function(obj, scConf, assay1 = NA, slot1 = c("data", "scale.data", "counts"), assay2 = NA, slot2 = NA, gene.mapping = FALSE, shiny.title = "scRNA-seq shiny app", shiny.dir = "shinyApp/", shiny.prefix = "sc1", enableSubset = TRUE, defPtSiz = 1.25, ganalytics = NA, default.gene1 = NA, default.gene2 = NA, default.multigene = NA, default.dimred = NA, tabs = c("civge", "civci", "gevge", "gem", "gec", "vio", "pro", "hea"), theme = "flatly", font = "Lato") {
 
   tbs <- c("civge", "civci", "gevge", "gem", "gec", "vio", "pro", "hea", "mar")
   if(length(tabs) < 1) stop("At least 1 tab must be specified.")
@@ -67,14 +68,14 @@ make_app <- function(obj, scConf, assay1 = NA, slot1 = c("data", "scale.data", "
     assay1 = assay1[1], slot1 = slot1[1],
     assay2 = assay2[1], slot2 = slot2[1],
     gene.mapping = gene.mapping,
-    shiny.prefix = "sc1", shiny.dir = shiny.dir,
+    shiny.prefix = shiny.prefix, shiny.dir = shiny.dir,
     default.gene1, default.gene2, default.multigene, default.dimred,
     tabs = tabs
   )
 
   make_code(
     shiny.title = shiny.title,
-    shiny.prefix = "sc1", shiny.dir = shiny.dir,
+    shiny.prefix = shiny.prefix, shiny.dir = shiny.dir,
     theme = theme, enableSubset = enableSubset, defPtSiz = defPtSiz,
     ganalytics = ganalytics, tabs = tabs, font = font
   )
