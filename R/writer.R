@@ -11,22 +11,6 @@ wr_lib <- function(lib) {
   glue::glue(paste0(oup,"\n"))
 }
 
-#' Write code for font
-#' @param font Google font name
-#' @rdname wr_font
-#' @export wr_font
-#'
-wr_font <- function(font = "Lato") {
-  paste0(
-'
-# load font for plot
-sysfonts::font_add_google(name = "',font,'", family = "',font,'")
-showtext::showtext_auto()
-
-'
-  )
-}
-
 #' Write code for loading objects for ui.R and server.R
 #' @param prefix file prefix
 #' @param tabs Vector of tab names to include
@@ -45,11 +29,10 @@ glue::glue(x,"\n")
 }
 
 #' Write code for fixed portion of server.R
-#' @param font (Character) Google font
 #' @rdname wr_sv_fix
 #' @export wr_sv_fix
 #'
-wr_sv_fix <- function(font = "Lato") {
+wr_sv_fix <- function() {
   glue::glue('
 
 ### Initialise variables and functions ----
@@ -105,13 +88,12 @@ show_progress <- function(...){{
 # @param Xang (Numeric) X axis text angle
 # @param XjusH (Numeric) X axis horizontal justification
 # @param lpos (Character) Position of Legend
-# @param font (Character) Google font
 # @param col_text (Character) Text colour
 # @param col_line (Character) Line colour
 #
-sctheme <- function(base_size = 24, XYval = TRUE, Xang = 0, XjusH = 0.5, lpos = "bottom", font = "{font}", col_text = "grey30", col_line = "grey60") {{
+sctheme <- function(base_size = 24, XYval = TRUE, Xang = 0, XjusH = 0.5, lpos = "bottom", col_text = "grey30", col_line = "grey60") {{
   oupTheme <- theme(
-    text = element_text(size = base_size, family = font),
+    text = element_text(size = base_size),
     panel.border = element_blank(),
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
@@ -1541,11 +1523,9 @@ output${prefix}_hea_oup.png <- downloadHandler(
 output${prefix}_hea_oup.pdf <- downloadHandler(
   filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_hea_plt,"_",input${prefix}_hea_grp,".pdf")) }},
   content = function(file) {{
-    pdf(file, useDingbats = FALSE, bg = "white", height = input${prefix}_hea_oup.height/2.54, width = input${prefix}_hea_oup.width/2.54, onefile = TRUE)
-    showtext::showtext_begin()
-    print(scBubbHeat({prefix}conf, {prefix}meta, input${prefix}_hea_inp, input${prefix}_hea_grp, input${prefix}_hea_plt, input${prefix}_hea_sub1, input${prefix}_hea_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_hea_scl, input${prefix}_hea_row, input${prefix}_hea_col, input${prefix}_hea_cols, input${prefix}_hea_fsz))
-    showtext::showtext_end()
-    dev.off()
+    ggsave(
+    file, device="pdf", useDingbats = FALSE, bg = "white", height = input${prefix}_hea_oup.height/2.54, width = input${prefix}_hea_oup.width/2.54, onefile = TRUE, plot = scBubbHeat({prefix}conf, {prefix}meta, input${prefix}_hea_inp, input${prefix}_hea_grp, input${prefix}_hea_plt, input${prefix}_hea_sub1, input${prefix}_hea_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_hea_scl, input${prefix}_hea_row, input${prefix}_hea_col, input${prefix}_hea_cols, input${prefix}_hea_fsz)
+    )
 }})
 
 output${prefix}_hea_oup.svg <- downloadHandler(
@@ -1601,11 +1581,9 @@ output${prefix}_gem_oup1.png <- downloadHandler(
 output${prefix}_gem_oup1.pdf <- downloadHandler(
   filename = function() {{ tolower(paste0("{prefix}", "_", input${prefix}_gem_drX, "_", input${prefix}_gem_drY, "_expression.pdf")) },
   content = function(file) {{
-  pdf(file, useDingbats = FALSE, height = input${prefix}_gem_oup1.height/2.54, width = input${prefix}_gem_oup1.width/2.54, bg = "white", onefile = TRUE)
-  showtext::showtext_begin()
-  print(scFeature({prefix}conf, {prefix}meta, input${prefix}_gem_drX, input${prefix}_gem_drY, input${prefix}_gem_inp, input${prefix}_gem_sub1, input${prefix}_gem_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_gem_siz, input${prefix}_gem_col, input${prefix}_gem_ord, input${prefix}_gem_fsz, input${prefix}_gem_asp, input${prefix}_gem_txt, input${prefix}_gem_ncol))
-  showtext::showtext_end()
-  dev.off()
+  ggsave(
+  file, device = "pdf", useDingbats = FALSE, height = input${prefix}_gem_oup1.height/2.54, width = input${prefix}_gem_oup1.width/2.54, bg = "white", onefile = TRUE, plot = scFeature({prefix}conf, {prefix}meta, input${prefix}_gem_drX, input${prefix}_gem_drY, input${prefix}_gem_inp, input${prefix}_gem_sub1, input${prefix}_gem_sub2, "{prefix}gexpr.h5", {prefix}gene, input${prefix}_gem_siz, input${prefix}_gem_col, input${prefix}_gem_ord, input${prefix}_gem_fsz, input${prefix}_gem_asp, input${prefix}_gem_txt, input${prefix}_gem_ncol)
+  )
 }})
 
 output${prefix}_gem_oup1.svg <- downloadHandler(
@@ -1636,12 +1614,11 @@ output${prefix}_mar_table <- renderDataTable({{
 #' Write code for main block of server.R
 #' @param prefix file prefix
 #' @param subst Conditional
-#' @param font Character denoting font for plots
 #' @param tabs Vector of tab names to include
 #' @rdname wr_sv_main
 #' @export wr_sv_main
 #'
-wr_sv_main <- function(prefix, subst = "", font = NULL, tabs = c("civge", "civci", "gevge", "gem", "gec", "vio", "pro", "hea")) {
+wr_sv_main <- function(prefix, subst = "", tabs = c("civge", "civci", "gevge", "gem", "gec", "vio", "pro", "hea")) {
   
 glue::glue(
 'optCrt="{{ option_create: function(data,escape) {{return(\'<div class=\\"create\\"><strong>\' + \'</strong></div>\');}} }}"

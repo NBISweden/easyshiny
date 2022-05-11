@@ -23,8 +23,7 @@ make_app(
   default.multigene = NA,
   default.dimred = NA,
   tabs = c("civge", "civci", "gevge", "gem", "gec", "vio", "pro", "hea"),
-  theme = "flatly",
-  font = "Lato"
+  theme = "flatly"
 )
 }
 \arguments{
@@ -90,8 +89,6 @@ reductions. Default is to use UMAP if not TSNE embeddings}
 \item{tabs}{Vector of tab names to include}
 
 \item{theme}{Bootstrap theme}
-
-\item{font}{Google font for plots}
 }
 \value{
 directory containing shiny app

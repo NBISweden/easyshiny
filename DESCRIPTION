@@ -29,7 +29,6 @@ Imports:
     shinycssloaders,
     shinyhelper,
     shinythemes,
-    showtext,
     SummarizedExperiment,
     utils
 Suggests:

@@ -13,7 +13,6 @@ make_code(
   theme = "flatly",
   tabs = c("civge", "civci", "gevge", "gem", "gec", "vio", "pro", "hea"),
   about = TRUE,
-  font = "Lato",
   ganalytics = NA
 )
 }
@@ -35,8 +34,6 @@ smaller size can be used if you have many cells in your dataset}
 \item{tabs}{Vector of tab names to include}
 
 \item{about}{Should about page be added as a tab?}
-
-\item{font}{Google font for plots. Defaults to "Lato".}
 
 \item{ganalytics}{Google analytics tracking ID (e.g. "UA-123456789-0")}
 }

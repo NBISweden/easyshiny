@@ -47,7 +47,6 @@
 #'   reductions. Default is to use UMAP if not TSNE embeddings
 #' @param tabs Vector of tab names to include
 #' @param theme Bootstrap theme
-#' @param font Google font for plots
 #'
 #' @return directory containing shiny app
 #'
@@ -55,7 +54,7 @@
 #'
 #' @export
 #' 
-make_app <- function(obj, scConf, assay1 = NA, slot1 = c("data", "scale.data", "counts"), assay2 = NA, slot2 = NA, gene.mapping = FALSE, shiny.title = "scRNA-seq shiny app", shiny.dir = "shinyApp/", shiny.prefix = "sc1", enableSubset = TRUE, defPtSiz = 1.25, ganalytics = NA, default.gene1 = NA, default.gene2 = NA, default.multigene = NA, default.dimred = NA, tabs = c("civge", "civci", "gevge", "gem", "gec", "vio", "pro", "hea"), theme = "flatly", font = "Lato") {
+make_app <- function(obj, scConf, assay1 = NA, slot1 = c("data", "scale.data", "counts"), assay2 = NA, slot2 = NA, gene.mapping = FALSE, shiny.title = "scRNA-seq shiny app", shiny.dir = "shinyApp/", shiny.prefix = "sc1", enableSubset = TRUE, defPtSiz = 1.25, ganalytics = NA, default.gene1 = NA, default.gene2 = NA, default.multigene = NA, default.dimred = NA, tabs = c("civge", "civci", "gevge", "gem", "gec", "vio", "pro", "hea"), theme = "flatly") {
 
   tbs <- c("civge", "civci", "gevge", "gem", "gec", "vio", "pro", "hea", "mar")
   if(length(tabs) < 1) stop("At least 1 tab must be specified.")
@@ -77,6 +76,6 @@ make_app <- function(obj, scConf, assay1 = NA, slot1 = c("data", "scale.data", "
     shiny.title = shiny.title,
     shiny.prefix = shiny.prefix, shiny.dir = shiny.dir,
     theme = theme, enableSubset = enableSubset, defPtSiz = defPtSiz,
-    ganalytics = ganalytics, tabs = tabs, font = font
+    ganalytics = ganalytics, tabs = tabs
   )
 }

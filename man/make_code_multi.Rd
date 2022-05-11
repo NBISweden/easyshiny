@@ -14,7 +14,6 @@ make_code_multi(
   theme = "flatly",
   tabs = c("civge", "civci", "gevge", "gem", "gec", "vio", "pro", "hea"),
   about = TRUE,
-  font = "Lato",
   ganalytics = NA
 )
 }
@@ -42,8 +41,6 @@ users have to specify one value for each dataset}
 \item{tabs}{Vector of tab names to include}
 
 \item{about}{Should about page be added as a tab?}
-
-\item{font}{Google font for plots}
 
 \item{ganalytics}{Google analytics tracking ID (e.g. "UA-123456789-0")}
 }
