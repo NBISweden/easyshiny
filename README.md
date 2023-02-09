@@ -85,7 +85,7 @@ shiny::runApp("app")
 
 ## Acknowledgements
 
-This project is built on [ShinyCell](https://github.com/SGDDNB/ShinyCell).
+This project is built on [ShinyCell](https://github.com/SGDDNB/ShinyCell). This was developed in collaboration with [Makinen Lab](http://www.makinenlab.com/). Thanks to [Taija Mäkinen](https://www.igp.uu.se/research/vascular-biology/taija-makinen/) and [Marle Kraft](https://www.katalog.uu.se/profile/?id=N19-1321) for their valuable contribution.
 
 ## Issues
 
@@ -93,4 +93,4 @@ Report issues [here](https://github.com/royfrancis/easyshiny/issues).
 
 ---
 
-2022 • Roy Francis
+2023 • NBIS
